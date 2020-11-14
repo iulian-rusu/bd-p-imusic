@@ -20,16 +20,17 @@ class AppGUI(tk.Frame):
         self.pack(side="top", fill="both", expand=True)
         # dcitionary with all app pages
         self.pages = {
-            'start': StartPage(master=self, width=AppGUI.WIDTH, height=AppGUI.HEIGHT),
-            'home': HomePage(master=self, width=AppGUI.WIDTH, height=AppGUI.HEIGHT)
+            'start': StartPage(title='Welcome to iMusic', master=self, width=AppGUI.WIDTH, height=AppGUI.HEIGHT),
+            'home': HomePage(title='Home', master=self, width=AppGUI.WIDTH, height=AppGUI.HEIGHT)
         }
         self.active_page = None
+        self.master.resizable(False, False)
         self.show_page('start')
 
     def show_page(self, frame_name: str):
         # sets the specified page as the current active page
         try:
             self.active_page = self.pages[frame_name]
-            self.active_page.show(self.active_page.get_wnd_title())
+            self.active_page.show()
         except KeyError as e:
             logging.error(f"Unknown page: {e}")

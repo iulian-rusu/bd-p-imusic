@@ -222,7 +222,7 @@ BEGIN
     :new.user_id := users_user_id_seq.nextval;
 END;
 /
- -- triggere pentru validarea datelor
+ -- date validation
 CREATE OR REPLACE TRIGGER transactions_date_trg BEFORE
 	INSERT OR UPDATE ON transactions
 	FOR EACH ROW
@@ -230,7 +230,7 @@ BEGIN
 	IF( :new."date" > SYSDATE )
 	THEN
 		RAISE_APPLICATION_ERROR( -20001,
-		'Data invalida: ' || TO_CHAR( :new."date", 'DD.MM.YYYY HH24:MI:SS' ) || ' nu poate fi mai mare decat data curenta.' );
+		'Invalid date: ' || TO_CHAR( :new."date", 'DD.MM.YYYY HH24:MI:SS' ) || ' cannot be from the future.');
 	END IF;
 END;
 /
@@ -242,7 +242,7 @@ BEGIN
 	IF( :new.release_date > SYSDATE )
 	THEN
 		RAISE_APPLICATION_ERROR( -20001,
-		'Data invalida: ' || TO_CHAR( :new.release_date, 'DD.MM.YYYY HH24:MI:SS' ) || ' nu poate fi mai mare decat data curenta.' );
+		'Invalid date: '|| TO_CHAR( :new.release_date, 'DD.MM.YYYY HH24:MI:SS' ) || ' cannot be from the future.' );
 	END IF;
 END;
 /
@@ -254,7 +254,7 @@ BEGIN
 	IF( :new.expiration_date <= SYSDATE )
 	THEN
 		RAISE_APPLICATION_ERROR( -20001,
-		'Data invalida: ' || TO_CHAR( :new.expiration_date, 'DD.MM.YYYY HH24:MI:SS' ) || ' nu poate fi mai mica decat data curenta.' );
+		'Invalid date: ' || TO_CHAR( :new.expiration_date, 'DD.MM.YYYY HH24:MI:SS' ) || ' cannot be from the past.' );
 	END IF;
 END;
 /
