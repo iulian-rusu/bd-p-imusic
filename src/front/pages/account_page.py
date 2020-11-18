@@ -2,8 +2,8 @@ import tkinter as tk
 import tkinter.ttk as ttk
 from abc import ABC
 
-from src.gui.pages.base_page import BasePage
-from src.gui.custom_button import CustomButton
+from src.front.pages.base_page import BasePage
+from src.front.custom_button import CustomButton
 
 
 class AccountPage(BasePage, ABC):

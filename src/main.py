@@ -3,7 +3,7 @@ import sys
 import logging
 
 from src.application import Application
-from src.database.db_connetcion import DBConnection
+from src.back.db_connetcion import DBConnection
 
 logging.basicConfig(level=logging.DEBUG, format='[%(levelname)s]@%(asctime)s: %(message)s')
 

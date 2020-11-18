@@ -10,6 +10,7 @@ def sanitize(user_input: str) -> str:
 class KeyDerivator(metaclass=abc.ABCMeta):
     """
     Derives a hashed key using PBKDF2 (Password-Based Key Derivation Function 2).
+    Do not change the private fields below unless u want to reset all user passwords.
     """
     __SALT_OFFSET = 64
     __SALT_POW = 3.14159
@@ -19,9 +20,9 @@ class KeyDerivator(metaclass=abc.ABCMeta):
     __HASH_ITERS = 1000
 
     @staticmethod
-    def get_hash(password: str) -> bytes:
+    def get_hash(password: str) -> str:
         salt = ''.join(map(KeyDerivator.__map_char, KeyDerivator.__SALT_PREFIX + password))
-        return PBKDF2(password, salt, iterations=KeyDerivator.__HASH_ITERS).read(KeyDerivator.__HASH_LEN)
+        return PBKDF2(password, salt, iterations=KeyDerivator.__HASH_ITERS).read(KeyDerivator.__HASH_LEN).hex()
 
     @staticmethod
     def __map_char(char: chr) -> chr:

@@ -1,8 +1,8 @@
 from abc import ABC
 from typing import Callable
 
-from src.gui.table_views.table_view import TableView
-from src.database.db_connetcion import DBConnection
+from src.front.table_views.table_view import TableView
+from src.back.db_connetcion import DBConnection
 
 
 class ArtistView(TableView, ABC):

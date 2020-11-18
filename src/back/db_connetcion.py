@@ -47,6 +47,19 @@ class DBConnection:
                 logging.error(f"Database error: {err}")
         return None
 
+    def exec_insertion(self, sql_command: str) -> bool:
+        response = False
+        if self.is_connected:
+            try:
+                with self.connection.cursor() as cursor:
+                    cursor.execute(sql_command)
+                    logging.info("Successfully executed insertion")
+                    self.connection.commit()
+                    response = True
+            except cx_Oracle.Error as err:
+                logging.error(f"Database error: {err}")
+        return response
+
     def close_cursor(self):
         try:
             self.cursor.close()

@@ -2,7 +2,7 @@ from tkinter import ttk
 import abc
 from typing import Callable
 
-from src.database.db_connetcion import DBConnection
+from src.back.db_connetcion import DBConnection
 
 
 class TableView(ttk.Treeview, metaclass=abc.ABCMeta):

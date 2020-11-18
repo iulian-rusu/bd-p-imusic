@@ -2,13 +2,13 @@ import tkinter as tk
 import tkinter.ttk as ttk
 from abc import ABC
 
-from src.database.input_processing import sanitize
-from src.gui.pages.base_page import BasePage
-from src.gui.custom_button import CustomButton
-from src.gui.table_views.album_view import AlbumView
-from src.gui.table_views.artist_view import ArtistView
-from src.gui.table_views.song_view import SongView
-from src.gui.table_views.table_view import TableView
+from src.back.input_processing import sanitize
+from src.front.pages.base_page import BasePage
+from src.front.custom_button import CustomButton
+from src.front.table_views.album_view import AlbumView
+from src.front.table_views.artist_view import ArtistView
+from src.front.table_views.song_view import SongView
+from src.front.table_views.table_view import TableView
 
 
 class HomePage(BasePage, ABC):

@@ -2,9 +2,11 @@ import tkinter as tk
 import tkinter.ttk as ttk
 import logging
 from abc import ABC
+import datetime
 
-from src.gui.pages.base_page import BasePage
-from src.gui.custom_button import CustomButton
+from src.back.user import User
+from src.front.pages.base_page import BasePage
+from src.front.custom_button import CustomButton
 
 
 class StartPage(BasePage, ABC):
@@ -19,18 +21,73 @@ class StartPage(BasePage, ABC):
         self.entries += [
             self.username_entry, self.password_entry, self.username_reg_entry, self.password_reg_entry,
             self.password_conf_entry, self.email_entry, self.first_name_entry, self.last_name_entry,
-            self.card_nr_entry, self.card_type_spinbox, self.exp_y_spinbox,  self.exp_m_spinbox,  self.exp_d_spinbox,
-            ]
+            self.card_nr_entry, self.card_type_spinbox, self.exp_y_spinbox, self.exp_m_spinbox, self.exp_d_spinbox,
+        ]
 
     def on_log_in(self):
-        # TODO: validate input data and log in
-        logging.info(f"User {self.username_entry.get()} logged in")
-        self.master.show_page('home')
+        username = self.username_entry.get()
+        password = self.password_entry.get()
+        if self.master.log_in_user(username, password):
+            # log in was successful
+            logging.info(f"User {username} logged in")
+            self.master.show_page('home')
+        else:
+            logging.info(f"Failed log in for {username}")
+            # change entry color to red to signal invalid credentials
+            self.username_entry.config(fg='red')
+            self.password_entry.config(fg='red')
+            # change color back after a short delay
+            self.config_after_delay(delay=0.5, components=[self.username_entry, self.password_entry], fg='black')
 
     def on_register(self):
-        # TODO: validate input data and register new user
-        logging.info(f"New user registered: {self.username_reg_entry.get()}")
-        self.master.show_page('home')
+        try:
+            # check passwords
+            password = self.password_reg_entry.get()
+            password_conf = self.password_conf_entry.get()
+            if len(password) < 8:
+                raise ValueError("password too short")
+            if password != password_conf:
+                raise ValueError("passwords don't match")
+            # get other user data
+            username = self.username_reg_entry.get()
+            first_name = self.first_name_entry.get().title()
+            last_name = self.last_name_entry.get().title()
+            email = self.email_entry.get()
+            # email is optional - check if it is specified and replace it with 'NULL' if not
+            if len(email) == 0:
+                email = 'NULL'
+            # card_nr must be numeric and of length 16
+            card_nr = self.card_nr_entry.get()
+            if not (len(card_nr) == 16 and card_nr.isalnum()):
+                raise ValueError("card number must be 16 digits long")
+            # check if all date spinboxes are specified
+            exp_d = self.exp_d_spinbox.get()
+            exp_m = self.exp_m_spinbox.get()
+            exp_y = self.exp_y_spinbox.get()
+            if len(exp_d) * len(exp_m) * len(exp_y) == 0:
+                raise ValueError("incomplete date")
+            # convert date to desired format
+            expiration_date = f'{exp_d}-{exp_m}-{exp_y}'
+            expiration_date = datetime.datetime.strptime(expiration_date, '%d-%m-%Y').strftime('%d %b %Y')
+            # initial account balance is always 0
+            account_balance = '0'
+            card_type = self.card_type_spinbox.get()
+            user_to_register = User(username, first_name, last_name, password, email, card_nr, expiration_date,
+                                    account_balance, card_type)
+            if user_to_register.has_empty_fields():
+                raise ValueError("not all input fields completed")
+            # try to load user data into database
+            if self.master.register_user(user_to_register):
+                logging.info(f"New user registered: {username}")
+                self.master.show_page('home')
+            else:
+                raise ValueError("unable to insert user into database")
+        except ValueError as err:
+            # handle wrong input
+            logging.info(f"Failed to register new user: {err}")
+            self.reg_btn.config(foreground='red')
+            # change color back after a short delay
+            self.config_after_delay(delay=0.5, components=[self.reg_btn], foreground='black')
 
     def build_gui(self):
         # log-in frame
@@ -139,24 +196,24 @@ class StartPage(BasePage, ABC):
         self.card_nr_entry.grid(column='1', row='7')
         self.card_type_spinbox = tk.Spinbox(self.register_frame)
         self.card_type_spinbox.config(font=BasePage.LIGHT_FONT, relief='flat', values='credit debit',
-                                      width='10')
+                                      width='10', state='readonly')
         self.card_type_spinbox.grid(column='1', row='8')
         self.exp_date_frame = ttk.Frame(self.register_frame)
         self.exp_y_spinbox = tk.Spinbox(self.exp_date_frame)
         year = tk.StringVar()
         self.exp_y_spinbox.config(font=BasePage.LIGHT_FONT, from_='2020', to='2099', increment='1',
-                                  relief='flat')
+                                  relief='flat', state='readonly')
         self.exp_y_spinbox.config(textvariable=year, width='5')
         self.exp_y_spinbox.grid(column='1', padx='5', row='0')
         self.exp_m_spinbox = tk.Spinbox(self.exp_date_frame)
         month = tk.StringVar()
         self.exp_m_spinbox.config(font=BasePage.LIGHT_FONT, from_='1', to='12', increment='1', relief='flat')
-        self.exp_m_spinbox.config(textvariable=month, width='5')
+        self.exp_m_spinbox.config(textvariable=month, width='5', state='readonly')
         self.exp_m_spinbox.grid(column='1', padx='5', row='1')
         self.exp_d_spinbox = tk.Spinbox(self.exp_date_frame)
         day = tk.StringVar()
         self.exp_d_spinbox.config(font=BasePage.LIGHT_FONT, from_='1', to='31', increment='1', relief='flat')
-        self.exp_d_spinbox.config(textvariable=day, width='5')
+        self.exp_d_spinbox.config(textvariable=day, width='5', state='readonly')
         self.exp_d_spinbox.grid(column='1', padx='5', row='2')
         self.year_lbl = tk.Label(self.exp_date_frame)
         self.year_lbl.config(font=BasePage.LIGHT_FONT, text='year:')
