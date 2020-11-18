@@ -1,11 +1,12 @@
-import tkinter as tk
 import argparse
 import sys
 import logging
-from src.gui.app_gui import AppGUI
-from src.sql.db_connetcion import DBConnection
+
+from src.application import Application
+from src.database.db_connetcion import DBConnection
 
 logging.basicConfig(level=logging.DEBUG, format='[%(levelname)s]@%(asctime)s: %(message)s')
+
 
 def parse_args():
     parser = argparse.ArgumentParser(description='Parse parameters for database access.')
@@ -27,7 +28,7 @@ def parse_args():
     return arguments
 
 
-def on_closing(conn: DBConnection, wnd: tk.Tk):
+def on_closing(conn: DBConnection, wnd: Application):
     # handler for window close event - closes the database connection
     def close():
         conn.disconnect()
@@ -42,8 +43,7 @@ if __name__ == '__main__':
     # create database connection
     db_connection = DBConnection(host=args.host, port=args.port, service=args.service)
     db_connection.connect(user=args.username, password=args.password)
-    # start the GUI
-    root = tk.Tk()
-    root.protocol("WM_DELETE_WINDOW", on_closing(db_connection, root))
-    app = AppGUI(db_connection=db_connection, master=root)
-    root.mainloop()
+    # start the app
+    app = Application(db_connection)
+    app.protocol("WM_DELETE_WINDOW", on_closing(db_connection, app))
+    app.mainloop()

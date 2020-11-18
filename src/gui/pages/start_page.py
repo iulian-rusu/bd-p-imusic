@@ -9,19 +9,26 @@ from src.gui.custom_button import CustomButton
 
 class StartPage(BasePage, ABC):
     """
-        The starting page of the application.
-        Contains a log-in form, as well as a registration form for new users.
+    The starting page of the application.
+    Contains a log-in form, as well as a registration form for new users.
     """
 
     def __init__(self, *args, **kwargs):
         BasePage.__init__(self, *args, **kwargs)
         self.build_gui()
+        self.entries += [
+            self.username_entry, self.password_entry, self.username_reg_entry, self.password_reg_entry,
+            self.password_conf_entry, self.email_entry, self.first_name_entry, self.last_name_entry,
+            self.card_nr_entry, self.card_type_spinbox, self.exp_y_spinbox,  self.exp_m_spinbox,  self.exp_d_spinbox,
+            ]
 
     def on_log_in(self):
+        # TODO: validate input data and log in
         logging.info(f"User {self.username_entry.get()} logged in")
         self.master.show_page('home')
 
     def on_register(self):
+        # TODO: validate input data and register new user
         logging.info(f"New user registered: {self.username_reg_entry.get()}")
         self.master.show_page('home')
 
@@ -34,6 +41,7 @@ class StartPage(BasePage, ABC):
         filler_top.grid(pady='120', columnspan='2')
         filler_bot = tk.Frame(self.login_frame)
         filler_bot.grid(row='4', pady='120', columnspan='2')
+        # username and password fields and labels
         self.username_lbl = tk.Label(self.login_frame)
         self.username_lbl.config(background='#d3d3d3', font=BasePage.LIGHT_FONT, text='username:')
         self.username_lbl.grid(row='1', padx='15', pady='20', sticky='e')
@@ -53,12 +61,13 @@ class StartPage(BasePage, ABC):
         self.login_btn.config(text='log in', width='10')
         self.login_btn.grid(column='0', columnspan='2', padx='5', pady='10', ipadx='5', ipady='3', row='3')
         self.login_btn.configure(command=self.on_log_in)
+
         # application info frame
         self.info_frame = tk.Frame(self, background='#c3c3c3')
         filler_top = tk.Frame(self.info_frame)
-        filler_top.grid(pady='136', columnspan='2')
+        filler_top.grid(pady='130', columnspan='2')
         filler_bot = tk.Frame(self.info_frame)
-        filler_bot.grid(row='3', pady='130', columnspan='2')
+        filler_bot.grid(row='3', pady='136', columnspan='2')
         self.info_frame.config(height=self.winfo_height(), padx='30', width='400')
         self.info_frame.grid(column='0', row='0')
         self.app_info_msg = tk.Message(self.info_frame)
@@ -71,6 +80,7 @@ class StartPage(BasePage, ABC):
                                     text='Browse and buy music from one of the largest databases in the world. ',
                                     width='300', background='#c3c3c3')
         self.description_msg.grid(column='0', padx='50', row='2', sticky='w')
+
         # registration frame
         self.register_frame = tk.Frame(self)
         self.register_frame.config(height='800', padx='70', width='400')
@@ -78,7 +88,7 @@ class StartPage(BasePage, ABC):
         self.register_msg = tk.Message(self.register_frame)
         self.register_msg.config(font='{Bahnschrift Light} 16 {bold}', text='Don\'t have an account yet?\nRegister '
                                                                             'now for free!', width='350')
-        self.register_msg.grid(columnspan='2', padx='5', pady='5')
+        self.register_msg.grid(columnspan='2', padx='5', pady='4')
         self.username_reg_lbl = tk.Label(self.register_frame)
         self.username_reg_lbl.config(font=BasePage.LIGHT_FONT, text='username:')
         self.username_reg_lbl.grid(padx='10', pady='5', row='1', sticky='e')

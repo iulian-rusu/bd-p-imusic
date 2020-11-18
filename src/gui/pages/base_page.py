@@ -4,8 +4,8 @@ import abc
 
 class BasePage(tk.Frame, metaclass=abc.ABCMeta):
     """
-        Base abstract class for all GUI pages.
-        Sets the frame dimensions and adds the frame to the master grid.
+    Base abstract class for all GUI pages.
+    Sets the frame dimensions and adds the frame to the master grid.
     """
     LIGHT_FONT = '{Bahnschrift Light} 12 {}'
     BOLD_FONT = '{Bahnschrift} 12 {}'
@@ -15,13 +15,20 @@ class BasePage(tk.Frame, metaclass=abc.ABCMeta):
         super().__init__(*args, **kwargs)
         self.title = title
         self.grid(row=0, column=0, sticky="nsew")
-        self.config(height=self.winfo_height(), width=self.winfo_width())
-        self.config(height=self.winfo_height(), width=self.winfo_width())
+        self.entries = []
 
-    def show(self, aboveThis=None):
+    def show(self):
         self.winfo_toplevel().title(self.title)
-        super().tkraise(aboveThis)
+        self.reset()
+        self.tkraise()
+
+    def reset(self):
+        # clears the text in all entry fields and spinboxes
+        for entry in self.entries:
+            entry.delete(0, 'end')
 
     @abc.abstractmethod
     def build_gui(self):
         pass
+
+

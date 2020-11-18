@@ -3,8 +3,8 @@ import tkinter as tk
 
 class CustomButton(tk.Button):
     """
-        Custom tk.Button that changes background when hovered.
-        Adapted from https://stackoverflow.com/questions/49888623/tkinter-hovering-over-button-color-change.
+    Custom tk.Button that changes background when hovered.
+    Adapted from https://stackoverflow.com/questions/49888623/tkinter-hovering-over-button-color-change.
     """
     def __init__(self, *args, **kwargs):
         tk.Button.__init__(self, *args, **kwargs)

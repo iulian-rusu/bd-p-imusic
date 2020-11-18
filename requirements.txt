@@ -1,1 +1,2 @@
 cx-Oracle==8.0.1
+pbkdf2==1.3
