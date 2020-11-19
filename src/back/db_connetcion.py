@@ -36,24 +36,24 @@ class DBConnection:
             except cx_Oracle.Error as err:
                 logging.error(f"Database error: {err}")
 
-    def exec_query(self, query: str) -> Optional[cx_Oracle.Cursor]:
+    def fetch_data(self, query: str) -> Optional[cx_Oracle.Cursor]:
         if self.is_connected:
             try:
                 self.cursor = self.connection.cursor()
                 self.cursor.execute(query)
-                logging.info("Successfully executed query")
+                logging.info("Successfully fetched data")
                 return self.cursor
             except cx_Oracle.Error as err:
                 logging.error(f"Database error: {err}")
         return None
 
-    def exec_insertion(self, sql_command: str) -> bool:
+    def exec_command(self, sql_command: str) -> bool:
         response = False
         if self.is_connected:
             try:
                 with self.connection.cursor() as cursor:
                     cursor.execute(sql_command)
-                    logging.info("Successfully executed insertion")
+                    logging.info("Successfully executed command")
                     self.connection.commit()
                     response = True
             except cx_Oracle.Error as err:

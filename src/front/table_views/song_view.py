@@ -1,5 +1,4 @@
 from abc import ABC
-from typing import Callable
 
 from src.front.table_views.table_view import TableView
 from src.back.db_connetcion import DBConnection

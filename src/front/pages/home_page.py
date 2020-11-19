@@ -25,7 +25,7 @@ class HomePage(BasePage, ABC):
         self.entries += [self.search_entry]
 
     def on_log_out(self):
-        # TODO: log current user out
+        self.master.user = None
         self.master.show_page('start')
 
     def on_search(self):
@@ -77,6 +77,7 @@ class HomePage(BasePage, ABC):
 
     def reset(self):
         super().reset()
+        self.account_balance_lbl.config(text=f"balance: ${self.master.user.account_balace/100.0}")
         self.set_current_view(self.songs_btn)
 
     def build_gui(self):

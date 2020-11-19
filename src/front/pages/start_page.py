@@ -29,10 +29,10 @@ class StartPage(BasePage, ABC):
         password = self.password_entry.get()
         if self.master.log_in_user(username, password):
             # log in was successful
-            logging.info(f"User {username} logged in")
+            logging.info(f"User '{username}' logged in")
             self.master.show_page('home')
         else:
-            logging.info(f"Failed log in for {username}")
+            logging.info(f"Failed log in for username: '{username}'")
             # change entry color to red to signal invalid credentials
             self.username_entry.config(fg='red')
             self.password_entry.config(fg='red')
@@ -44,7 +44,7 @@ class StartPage(BasePage, ABC):
             # check passwords
             password = self.password_reg_entry.get()
             password_conf = self.password_conf_entry.get()
-            if len(password) < 8:
+            if len(password) < User.MIN_PASS_LEN:
                 raise ValueError("password too short")
             if password != password_conf:
                 raise ValueError("passwords don't match")
@@ -55,7 +55,7 @@ class StartPage(BasePage, ABC):
             email = self.email_entry.get()
             # email is optional - check if it is specified and replace it with 'NULL' if not
             if len(email) == 0:
-                email = 'NULL'
+                email = User.NO_EMAIL
             # card_nr must be numeric and of length 16
             card_nr = self.card_nr_entry.get()
             if not (len(card_nr) == 16 and card_nr.isalnum()):
@@ -78,13 +78,13 @@ class StartPage(BasePage, ABC):
                 raise ValueError("not all input fields completed")
             # try to load user data into database
             if self.master.register_user(user_to_register):
-                logging.info(f"New user registered: {username}")
+                logging.info(f"New user registered: '{username}'")
                 self.master.show_page('home')
             else:
                 raise ValueError("unable to insert user into database")
         except ValueError as err:
             # handle wrong input
-            logging.info(f"Failed to register new user: {err}")
+            logging.error(f"Failed to register new user: {err}")
             self.reg_btn.config(foreground='red')
             # change color back after a short delay
             self.config_after_delay(delay=0.5, components=[self.reg_btn], foreground='black')

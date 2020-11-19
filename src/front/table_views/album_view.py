@@ -1,5 +1,4 @@
 from abc import ABC
-from typing import Callable
 
 from src.front.table_views.table_view import TableView
 from src.back.db_connetcion import DBConnection
@@ -28,6 +27,7 @@ class AlbumView(TableView, ABC):
         INNER JOIN MUSIC_ARTISTS ON MUSIC_ARTISTS.ARTIST_ID = MUSIC_ALBUMS.ARTIST_ID
         INNER JOIN SONGS ON SONGS.ALBUM_ID = MUSIC_ALBUMS.ALBUM_ID
         GROUP BY MUSIC_ALBUMS.NAME, MUSIC_ARTISTS.NAME, MUSIC_ALBUMS.RELEASE_DATE, MUSIC_ALBUMS.PRICE
+        ORDER BY MUSIC_ALBUMS.NAME
         '''
         self._update_content(query, connection)
 
@@ -43,5 +43,6 @@ class AlbumView(TableView, ABC):
         INNER JOIN SONGS ON SONGS.ALBUM_ID = MUSIC_ALBUMS.ALBUM_ID
         WHERE LOWER(MUSIC_ALBUMS.NAME) LIKE LOWER('%{key}%') AND LOWER(MUSIC_ARTISTS.NAME) LIKE LOWER('%{parent}%')
         GROUP BY MUSIC_ALBUMS.NAME, MUSIC_ARTISTS.NAME, MUSIC_ALBUMS.RELEASE_DATE, MUSIC_ALBUMS.PRICE
+        ORDER BY MUSIC_ALBUMS.NAME
         '''
         self._update_content(query, connection)
