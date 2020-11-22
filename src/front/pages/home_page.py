@@ -1,6 +1,7 @@
 import tkinter as tk
 import tkinter.ttk as ttk
 from abc import ABC
+from collections import namedtuple
 
 from src.back.input_processing import sanitize
 from src.front.pages.base_page import BasePage
@@ -16,6 +17,7 @@ class HomePage(BasePage, ABC):
     The home page of the application.
     Contains the music catalog and allows the user to navigate to their account page.
     """
+    AlbumData = namedtuple("AlbumData", ['album_id', 'album_price'])
 
     def __init__(self, *args, **kwargs):
         BasePage.__init__(self, *args, **kwargs)
@@ -39,20 +41,20 @@ class HomePage(BasePage, ABC):
         self.table_views[self.current_view_btn].load_searched_rows(key=user_input, connection=self.master.db_connection)
 
     def on_buy(self):
-        if self.selected_album:
-            album_name, price, artist_name = self.selected_album
-            if self.master.buy_album(album_name, price, artist_name):
-                self.account_balance_lbl.config(text=f"balance: ${self.master.user.account_balace / 100.0}")
-                self.buy_btn.display_message('success', delay=1, background='#59c872', final_state='disabled')
-            else:
-                self.buy_btn.display_message('error', delay=1, final_state='disabled')
+        if self.selected_album and self.master.buy_album(self.selected_album.album_id, self.selected_album.album_price):
+            self.account_balance_lbl.config(text=f"balance: ${self.master.user.account_balace / 100.0}")
+            self.buy_btn.display_message('success', delay=0.5, background='#59c872')
+            self.selected_album = None
+        else:
+            self.buy_btn.display_message('error', delay=0.5, final_state='disabled')
 
     def on_album_select(self, event):
         if self.buy_btn['text'] != 'buy album':
             return
-        self.selected_album = self.table_views[self.albums_btn].get_selected_album_data(event)
-        if self.selected_album:
-            album_price = self.selected_album[1]
+        album_data = self.table_views[self.albums_btn].get_selected_album_data(event)
+        if album_data:
+            self.selected_album = HomePage.AlbumData(*album_data)
+            album_price = self.selected_album.album_price
             if self.master.user.account_balace >= int(float(album_price) * 100):
                 self.buy_btn.config(state='normal')
             else:

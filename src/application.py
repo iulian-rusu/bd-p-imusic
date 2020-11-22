@@ -57,9 +57,15 @@ class Application(tk.Tk):
             self.show_page('home')
         return flag
 
-    def buy_album(self, album_name: str, price: str, artist_name: str) -> bool:
-        if Transaction.buy_album(self.user.username, album_name, price, artist_name, self.db_connection):
+    def buy_album(self, album_id: str, price: str) -> bool:
+        if Transaction.make_transaction(self.user.username, album_id, price, self.db_connection):
             self.user.account_balace -= int(float(price) * 100)
+            return True
+        return False
+
+    def refund_transaction(self, tr_id: str, price: str) -> bool:
+        if Transaction.refund_transaction(self.user.username, tr_id, price, self.db_connection):
+            self.user.account_balace += int(float(price) * 100)
             return True
         return False
 
@@ -67,8 +73,5 @@ class Application(tk.Tk):
         return self.user.update_personal_data(username, first_name, last_name, email, password,
                                               db_connection=self.db_connection)
 
-    def add_user_funds(self, amount_to_add: float) -> bool:
-        if self.user.add_funds(amount_to_add, db_connection=self.db_connection):
-            self.user.account_balace += int(amount_to_add * 100)
-            return True
-        return False
+    def add_user_funds(self, amount_to_add: str) -> bool:
+        return self.user.add_funds(amount_to_add, db_connection=self.db_connection)

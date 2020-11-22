@@ -85,13 +85,16 @@ class User:
             return True
         return False
 
-    def add_funds(self, amount_to_add: float, db_connection: DBConnection) -> bool:
+    def add_funds(self, amount_to_add: str, db_connection: DBConnection) -> bool:
         command = f"""
             UPDATE PAYMENT_INFO SET 
             ACCOUNT_BALANCE = ACCOUNT_BALANCE + {amount_to_add} 
             WHERE USER_ID IN (SELECT USER_ID FROM USERS WHERE USERNAME='{sanitize(self.username)}')
         """
-        return db_connection.exec_command(command)
+        if db_connection.exec_command(command):
+            self.account_balace += int(float(amount_to_add) * 100)
+            return True
+        return False
 
     @classmethod
     def from_login(cls, username: str, password: str, db_connection: DBConnection) -> Optional['User']:

@@ -105,12 +105,12 @@ ALTER TABLE users
 
 ALTER TABLE users
     ADD CONSTRAINT first_name_ck CHECK ( REGEXP_LIKE ( first_name,
-                                                       '^[A-Za-z][A-Za-z\''\-]+([\ A-Za-z][A-Za-z\''\-]+)*$' )
+                                                       '^[A-Za-z][A-Za-z\'\-]+([\ A-Za-z][A-Za-z\'\-]+)*$' )
                                          AND length(first_name) >= 2 );
 
 ALTER TABLE users
     ADD CONSTRAINT last_name_ck CHECK ( REGEXP_LIKE ( last_name,
-                                                      '^[A-Za-z][A-Za-z\''\-]+([\ A-Za-z][A-Za-z\''\-]+)*$' )
+                                                      '^[A-Za-z][A-Za-z\'\-]+([\ A-Za-z][A-Za-z\'\-]+)*$' )
                                         AND length(last_name) >= 2 );
 
 ALTER TABLE users

@@ -2,6 +2,7 @@ import logging
 import tkinter as tk
 import tkinter.ttk as ttk
 from abc import ABC
+from collections import namedtuple
 
 from src.back.input_processing import sanitize
 from src.front.pages.base_page import BasePage
@@ -15,6 +16,7 @@ class AccountPage(BasePage, ABC):
     The user account page of the application.
     Contains the user's personal information and all purhcased music albums.
     """
+    AlbumData = namedtuple('AlbumData', ['name', 'price'])
 
     def __init__(self, *args, **kwargs):
         BasePage.__init__(self, *args, **kwargs)
@@ -35,6 +37,7 @@ class AccountPage(BasePage, ABC):
         self.payment_toggled_lbls = [
             self.add_funds_lbl, self.amount_lbl, self.verif_lbl, self.validate_btn]
         self.is_editing_personal_info = False
+        self.selected_album = None
 
     def reset(self):
         super().reset()
@@ -56,8 +59,11 @@ class AccountPage(BasePage, ABC):
         self.current_view_btn = new_btn
         current_view = self.views[self.current_view_btn]
         if isinstance(current_view, TableView):
+            self.refund_btn.tkraise()
             username_key = sanitize(self.master.user.username)
             current_view.load_searched_rows(username_key, connection=self.master.db_connection)
+        else:
+            self.add_funds_btn.tkraise()
         current_view.tkraise()
 
     def on_my_albums_view(self):
@@ -80,6 +86,28 @@ class AccountPage(BasePage, ABC):
         self.master.user = None
         self.master.show_page('start')
 
+    def on_refund(self):
+        if not self.selected_album:
+            return
+        if self.master.refund_transaction(self.selected_album.name, self.selected_album.price):
+            self.account_balance_lbl.config(text=f"balance: ${self.master.user.account_balace / 100.0}")
+            username_key = sanitize(self.master.user.username)
+            self.transaction_view.load_searched_rows(username_key, connection=self.master.db_connection)
+            self.selected_album = None
+            self.refund_btn.config(state='disabled', background='#59c872')
+        else:
+            self.refund_btn.display_message('error', delay=0.5, final_state='disabled')
+
+    def on_album_select(self, event):
+        if self.refund_btn['text'] != 'refund album':
+            return
+        album_data = self.transaction_view.get_selected_album_data(event)
+        if album_data:
+            self.selected_album = AccountPage.AlbumData(*album_data)
+            self.refund_btn.config(state='normal')
+        else:
+            self.refund_btn.config(state='disabled')
+
     def on_home(self):
         self.master.show_page('home')
 
@@ -91,20 +119,20 @@ class AccountPage(BasePage, ABC):
 
     def on_validate(self):
         try:
-            amount = float(self.amount_entry.get())
+            amount = self.amount_entry.get()
             verif = self.verif_entry.get()
             # verification code not actually implemented, just a placeholder mechanism
             if not verif.isnumeric():
                 raise ValueError("varification code must be numeric")
             # update funds in database
             if self.master.add_user_funds(amount):
-                self.validate_btn.display_message('success', delay=1, background='#59c872', final_state='disabled')
+                self.validate_btn.display_message('success', delay=0.5, background='#59c872', final_state='disabled')
                 self.account_balance_lbl.config(text=f"balance: ${self.master.user.account_balace / 100.0}")
             else:
                 raise ValueError('databases error')
         except (ValueError, OverflowError) as err:
             logging.error(f"Failed to add funds to account: {err}")
-            self.validate_btn.display_message('error', delay=1, final_state='disabled')
+            self.validate_btn.display_message('error', delay=0.5, final_state='disabled')
         for label in self.payment_toggled_lbls:
             label.config(state='disabled')
         for entry in self.payment_entries:
@@ -144,7 +172,7 @@ class AccountPage(BasePage, ABC):
                 raise RuntimeError('database could not update data')
         except (ValueError, RuntimeError) as err:
             logging.error(f"Failed to edit personal data: {err}")
-            self.edit_personal_info_btn.display_message('error', delay=1)
+            self.edit_personal_info_btn.display_message('error', delay=0.5)
         self.reset()
 
     def build_gui(self):
@@ -162,6 +190,12 @@ class AccountPage(BasePage, ABC):
         self.add_funds_btn.config(text='add funds', command=self.on_add_funds)
         self.add_funds_btn.place(anchor='nw', height='40', relwidth='0.0', relx='0.85714', rely='0.0',
                                  width='200', x='0', y='0')
+        self.refund_btn = CustomButton(self.top_menu_frame)
+        self.refund_btn.config(activebackground='#39a852', background='#59c872',
+                               font=BasePage.LIGHT_FONT, relief='flat')
+        self.refund_btn.place(anchor='nw', height='40', relwidth='0.0', relx='0.85714', rely='0.0',
+                              width='200', x='0', y='0')
+        self.refund_btn.config(text='refund album', state='disabled', command=self.on_refund)
         self.account_balance_lbl = ttk.Label(self.top_menu_frame)
         self.account_balance_lbl.config(background='#d1d1d1', font=BasePage.LIGHT_FONT, foreground='#515151',
                                         text='balance: $0')
@@ -201,6 +235,7 @@ class AccountPage(BasePage, ABC):
         # transactions view
         self.transaction_view = TransactionView(master=self.content_frame)
         self.transaction_view.place(anchor='nw', height='591', width='1400', x='0', y='0')
+        self.transaction_view.bind('<Button 1>', self.on_album_select)
         # account view
         self.account_info_frame = tk.Frame(self.content_frame)
         self.account_info_frame.config(width='1400', height='591')
