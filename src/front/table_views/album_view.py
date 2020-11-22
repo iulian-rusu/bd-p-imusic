@@ -1,4 +1,5 @@
 from abc import ABC
+from typing import Optional, Tuple
 
 from src.front.table_views.table_view import TableView
 from src.back.db_connetcion import DBConnection
@@ -14,6 +15,14 @@ class AlbumView(TableView, ABC):
         self.heading(3, text="artist")
         self.heading(4, text="no. songs")
         self.heading(5, text="release date")
+
+    def get_selected_album_data(self, event) -> Optional[Tuple[str, str, str]]:
+        album_iid = self.identify_row(event.y)
+        if album_iid != '':
+            album_data = self.item(album_iid)['values']
+            album_name, album_price, artist_name = album_data[0], album_data[1], album_data[2]
+            return album_name, album_price.lstrip('$ '), artist_name
+        return None
 
     def load_all_rows(self, connection: DBConnection):
         # loads all album data from the databases, sorted alphabetically by name

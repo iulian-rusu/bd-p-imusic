@@ -1,8 +1,5 @@
-import threading
-import time
 import tkinter as tk
 import abc
-from typing import List
 
 
 class BasePage(tk.Frame, metaclass=abc.ABCMeta):
@@ -26,21 +23,11 @@ class BasePage(tk.Frame, metaclass=abc.ABCMeta):
         self.tkraise()
 
     def reset(self):
-        # clears the text in all entry fields and spinboxes
         for entry in self.entries:
             entry.delete(0, 'end')
             entry.config(fg='black')
 
-    @staticmethod
-    def config_after_delay(delay: float, components: List, **kwargs):
-        def wrapped():
-            time.sleep(delay)
-            for component in components:
-                component.config(**kwargs)
-        threading.Thread(target=wrapped).start()
-
     @abc.abstractmethod
     def build_gui(self):
+        # all the ugly GUI building goes here
         pass
-
-

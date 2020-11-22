@@ -8,15 +8,8 @@ class User:
     NO_EMAIL = 'unspecified'
     MIN_PASS_LEN = 8
 
-    def __init__(self, username: str = None,
-                 first_name: str = None,
-                 last_name: str = None,
-                 hashed_password: str = None,
-                 email: str = NO_EMAIL,
-                 card_nr: str = None,
-                 expiration_date: str = None,
-                 account_balance: str = None,
-                 card_type: str = None):
+    def __init__(self, username: str, first_name: str, last_name: str, hashed_password: str, email: str,
+                 card_nr: str, expiration_date: str, account_balance: str, card_type: str):
         # personal info
         self.username = username
         self.first_name = first_name
@@ -36,15 +29,16 @@ class User:
                f"\nCARD TYPE:\t{self.card_type}\n"
 
     def has_empty_fields(self) -> bool:
-        return any(map(lambda attr: len(str(attr)) == 0, self.__dict__.values()))
+
+        return any(map(lambda attr: len(str(attr)) == 0, vars(self).values()))
 
     def match_password(self, password: str) -> bool:
         return KeyDerivator.get_hash(sanitize(password)) == self.__hashed_password
 
-    def register(self, db_connection: DBConnection):
+    def register(self, db_connection: DBConnection) -> bool:
         # sanitize fields
         username, first_name, last_name, password, email, card_nr, expiration_date, account_balance, card_type \
-            = [sanitize(str(attr)) for attr in self.__dict__.values()]
+            = [sanitize(str(attr)) for attr in vars(self).values()]
         self.__hashed_password = KeyDerivator.get_hash(password)
         # get hashed password
         command = f"""
@@ -56,9 +50,13 @@ class User:
                     '{self.__hashed_password}', 
                     NULLIF('{email}', '{User.NO_EMAIL}')
             );
-            INSERT INTO PAYMENT_INFO(USER_ID, CARD_NR, EXPIRATION_DATE, ACCOUNT_BALANCE, CARD_TYPE_ID)
-            VALUES ((SELECT USER_ID FROM USERS WHERE USERNAME='{username}'), '{card_nr}', TO_DATE('{expiration_date}', 
-            'dd-mm-yyyy'), {account_balance}, (SELECT TYPE_ID FROM CARD_TYPES WHERE NAME=INITCAP('{card_type}'))); 
+            INSERT INTO PAYMENT_INFO(USER_ID, CARD_NR, EXPIRATION_DATE, ACCOUNT_BALANCE, CARD_TYPE_ID) VALUES (
+                (SELECT USER_ID FROM USERS WHERE USERNAME='{username}'), 
+                '{card_nr}',
+                TO_DATE('{expiration_date}', 'dd-mm-yyyy'), 
+                {account_balance}, 
+                (SELECT TYPE_ID FROM CARD_TYPES WHERE NAME=INITCAP('{card_type}'))
+            ); 
         END;
         """
         return db_connection.exec_command(command)
@@ -93,13 +91,10 @@ class User:
             ACCOUNT_BALANCE = ACCOUNT_BALANCE + {amount_to_add} 
             WHERE USER_ID IN (SELECT USER_ID FROM USERS WHERE USERNAME='{sanitize(self.username)}')
         """
-        if db_connection.exec_command(command):
-            self.account_balace += int(amount_to_add * 100)
-            return True
-        return False
+        return db_connection.exec_command(command)
 
-    @staticmethod
-    def log_in(username: str, password: str, db_connection: DBConnection) -> Optional['User']:
+    @classmethod
+    def from_login(cls, username: str, password: str, db_connection: DBConnection) -> Optional['User']:
         query = f'''
         SELECT  USERS.USERNAME,
                 USERS.FIRST_NAME,
@@ -118,5 +113,5 @@ class User:
         result = db_connection.fetch_data(query)
         row = result.fetchone()
         if row:
-            return User(*row)
+            return cls(*row)
         return None

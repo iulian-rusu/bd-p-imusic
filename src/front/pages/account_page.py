@@ -5,7 +5,8 @@ from abc import ABC
 
 from src.back.input_processing import sanitize
 from src.front.pages.base_page import BasePage
-from src.front.custom_button import CustomButton
+from src.front.table_views.table_view import TableView
+from src.front.utils import CustomButton
 from src.front.table_views.transaction_view import TransactionView
 
 
@@ -45,8 +46,25 @@ class AccountPage(BasePage, ABC):
         self.load_account_data()
         for entry in self.entries:
             entry.config(state='readonly')
-        self.account_balance_lbl.config(text=f"balance: ${self.master.user.account_balace/100.0}")
+        self.account_balance_lbl.config(text=f"balance: ${self.master.user.account_balace / 100.0}")
         self.on_personal_info_view()
+
+    def set_current_view(self, new_btn: CustomButton):
+        if self.current_view_btn:
+            self.current_view_btn.config(font=BasePage.LIGHT_FONT, background='#d1d1d1')
+        new_btn.config(font=BasePage.UNDERLINED_BOLD_FONT, background='#c1c1c1')
+        self.current_view_btn = new_btn
+        current_view = self.views[self.current_view_btn]
+        if isinstance(current_view, TableView):
+            username_key = sanitize(self.master.user.username)
+            current_view.load_searched_rows(username_key, connection=self.master.db_connection)
+        current_view.tkraise()
+
+    def on_my_albums_view(self):
+        self.set_current_view(self.my_albums_btn)
+
+    def on_personal_info_view(self):
+        self.set_current_view(self.account_info_btn)
 
     def load_account_data(self):
         user = self.master.user
@@ -61,19 +79,6 @@ class AccountPage(BasePage, ABC):
     def on_log_out(self):
         self.master.user = None
         self.master.show_page('start')
-
-    def set_current_view(self, new_btn: CustomButton):
-        if self.current_view_btn:
-            self.current_view_btn.config(font=BasePage.LIGHT_FONT, background='#d1d1d1')
-        new_btn.config(font=BasePage.UNDERLINED_BOLD_FONT, background='#c1c1c1')
-        self.current_view_btn = new_btn
-        if self.current_view_btn == self.my_albums_btn:
-            self.transaction_view.load_searched_rows(key=sanitize(self.master.user.username),
-                                                     connection=self.master.db_connection)
-            self.transaction_view.place(anchor='nw', height='591', width='1400', x='0', y='0')
-            self.transaction_view.tkraise()
-        else:
-            self.transaction_view.place_forget()
 
     def on_home(self):
         self.master.show_page('home')
@@ -93,14 +98,13 @@ class AccountPage(BasePage, ABC):
                 raise ValueError("varification code must be numeric")
             # update funds in database
             if self.master.add_user_funds(amount):
-                self.validate_btn.config(text='success!', background='#59c872')
-                self.account_balance_lbl.config(text=f"balance: ${self.master.user.account_balace/100.0}")
+                self.validate_btn.display_message('success', delay=1, background='#59c872', final_state='disabled')
+                self.account_balance_lbl.config(text=f"balance: ${self.master.user.account_balace / 100.0}")
             else:
                 raise ValueError('databases error')
         except (ValueError, OverflowError) as err:
             logging.error(f"Failed to add funds to account: {err}")
-            self.validate_btn.config(text='error!', background='#ff9b9b')
-        BasePage.config_after_delay(1.0, [self.validate_btn], text='validate', background='#d1d1d1')
+            self.validate_btn.display_message('error', delay=1, final_state='disabled')
         for label in self.payment_toggled_lbls:
             label.config(state='disabled')
         for entry in self.payment_entries:
@@ -115,29 +119,33 @@ class AccountPage(BasePage, ABC):
             for label in self.personal_toggled_lbls:
                 label.config(state='normal')
         else:
-            user = self.master.user
             self.is_editing_personal_info = False
-            # try to save data to database
-            username, first_name, last_name, email, old_pass, new_pass, new_pass_conf \
-                = [e.get() for e in self.personal_entries]
-            try:
-                if len(old_pass):
-                    # attempt to change password
-                    if not user.match_password(old_pass):
-                        raise ValueError("old password incorrect")
-                    if len(new_pass) < user.MIN_PASS_LEN or new_pass != new_pass_conf:
-                        raise ValueError("new passwords don't match")
-                if self.master.update_user(username, first_name, last_name, email, new_pass):
-                    logging.info("Successfully updated user data")
-            except ValueError as err:
-                logging.error(f"Failed to edit personal data: {err}")
-            self.reset()
+            self.save_personal_info()
 
-    def on_my_albums_view(self):
-        self.set_current_view(self.my_albums_btn)
-
-    def on_personal_info_view(self):
-        self.set_current_view(self.personal_info_btn)
+    def save_personal_info(self):
+        user = self.master.user
+        # try to save data to database
+        username, first_name, last_name, email, old_pass, new_pass, new_pass_conf \
+            = [e.get() for e in self.personal_entries]
+        first_name = first_name.title()
+        last_name = last_name.title()
+        try:
+            if len(old_pass):
+                # attempt to change password
+                if not user.match_password(old_pass):
+                    raise ValueError("old password incorrect")
+                if len(new_pass) < user.MIN_PASS_LEN or new_pass != new_pass_conf:
+                    raise ValueError("new passwords don't match")
+            elif len(new_pass):
+                raise ValueError("old password required to change password")
+            if self.master.update_user(username, first_name, last_name, email, new_pass):
+                logging.info("Successfully updated user data")
+            else:
+                raise RuntimeError('database could not update data')
+        except (ValueError, RuntimeError) as err:
+            logging.error(f"Failed to edit personal data: {err}")
+            self.edit_personal_info_btn.display_message('error', delay=1)
+        self.reset()
 
     def build_gui(self):
         # top menu
@@ -165,11 +173,11 @@ class AccountPage(BasePage, ABC):
         self.top_menu_frame.grid()
         # bottom menu
         self.bottom_menu_frame = tk.Frame(self)
-        self.personal_info_btn = CustomButton(self.bottom_menu_frame)
-        self.personal_info_btn.config(activebackground='#9a9a9a', background='#d1d1d1',
-                                      font=BasePage.LIGHT_FONT, relief='flat')
-        self.personal_info_btn.config(state='normal', text='account info', command=self.on_personal_info_view)
-        self.personal_info_btn.place(anchor='nw', height='40', relx='0.142857', width='600', x='0', y='0')
+        self.account_info_btn = CustomButton(self.bottom_menu_frame)
+        self.account_info_btn.config(activebackground='#9a9a9a', background='#d1d1d1',
+                                     font=BasePage.LIGHT_FONT, relief='flat')
+        self.account_info_btn.config(state='normal', text='account info', command=self.on_personal_info_view)
+        self.account_info_btn.place(anchor='nw', height='40', relx='0.142857', width='600', x='0', y='0')
         self.my_albums_btn = CustomButton(self.bottom_menu_frame)
         self.my_albums_btn.config(activebackground='#9a9a9a', background='#d1d1d1',
                                   font=BasePage.LIGHT_FONT, relief='flat')
@@ -188,10 +196,22 @@ class AccountPage(BasePage, ABC):
         self.bottom_menu_frame.grid(column='0', row='2')
         # content frame
         self.content_frame = tk.Frame(self)
-        # transactions info
+        self.content_frame.config(height='591', width='1400')
+        self.content_frame.grid(column='0', row='1')
+        # transactions view
         self.transaction_view = TransactionView(master=self.content_frame)
-        # account info
-        self.personal_info_frame = tk.LabelFrame(self.content_frame)
+        self.transaction_view.place(anchor='nw', height='591', width='1400', x='0', y='0')
+        # account view
+        self.account_info_frame = tk.Frame(self.content_frame)
+        self.account_info_frame.config(width='1400', height='591')
+        self.account_info_frame.grid()
+        # build view dictionary
+        self.views = {
+            self.account_info_btn: self.account_info_frame,
+            self.my_albums_btn: self.transaction_view
+        }
+        # personal info
+        self.personal_info_frame = tk.LabelFrame(self.account_info_frame)
         self.label_frame = tk.Frame(self.personal_info_frame)
         self.username_lbl = tk.Label(self.label_frame)
         self.username_lbl.config(font=BasePage.LIGHT_FONT, text='username:')
@@ -252,7 +272,8 @@ class AccountPage(BasePage, ABC):
                                         text='personal info')
         self.personal_info_frame.config(width='200')
         self.personal_info_frame.place(anchor='nw', height='500', relx='0.05', rely='0.07', width='600', x='0', y='0')
-        self.payment_info_frame = tk.LabelFrame(self.content_frame)
+        # payment info
+        self.payment_info_frame = tk.LabelFrame(self.account_info_frame)
         self.payment_label_frame = tk.Frame(self.payment_info_frame)
         self.card_nr_lbl = tk.Label(self.payment_label_frame)
         self.card_nr_lbl.config(font=BasePage.LIGHT_FONT, text='card number:')
@@ -299,5 +320,3 @@ class AccountPage(BasePage, ABC):
         self.payment_entry_frame.place(anchor='ne', height='450', relx='1.0', rely='0.05', width='350', x='0', y='0')
         self.payment_info_frame.config(font=BasePage.LIGHT_FONT, height='200', text='payment info', width='200')
         self.payment_info_frame.place(anchor='nw', height='500', relx='0.52', rely='0.07', width='600', x='0', y='0')
-        self.content_frame.config(height='591', width='1400')
-        self.content_frame.grid(column='0', row='1')

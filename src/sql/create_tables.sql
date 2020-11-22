@@ -1,3 +1,4 @@
+
 CREATE TABLE card_types (
     type_id  SMALLINT NOT NULL,
     name     VARCHAR2(16) NOT NULL
@@ -85,6 +86,9 @@ ALTER TABLE transactions ADD CONSTRAINT transaction_amount_ck CHECK ( amount >= 
 
 ALTER TABLE transactions ADD CONSTRAINT transactions_pk PRIMARY KEY ( tr_id );
 
+ALTER TABLE transactions ADD CONSTRAINT tr_user_album_uk UNIQUE ( user_id,
+                                                                  album_id );
+
 CREATE TABLE users (
     user_id     INTEGER NOT NULL,
     username    VARCHAR2(32) NOT NULL,
@@ -101,12 +105,12 @@ ALTER TABLE users
 
 ALTER TABLE users
     ADD CONSTRAINT first_name_ck CHECK ( REGEXP_LIKE ( first_name,
-                                                       '^[A-Z][a-z]+[ \-]?[A-Za-z]*$' )
+                                                       '^[A-Za-z][A-Za-z\''\-]+([\ A-Za-z][A-Za-z\''\-]+)*$' )
                                          AND length(first_name) >= 2 );
 
 ALTER TABLE users
     ADD CONSTRAINT last_name_ck CHECK ( REGEXP_LIKE ( last_name,
-                                                      '^[A-Z][a-z]+[ \-]?[A-Za-z]*$' )
+                                                      '^[A-Za-z][A-Za-z\''\-]+([\ A-Za-z][A-Za-z\''\-]+)*$' )
                                         AND length(last_name) >= 2 );
 
 ALTER TABLE users
@@ -115,8 +119,9 @@ ALTER TABLE users
 
 ALTER TABLE users ADD CONSTRAINT users_pk PRIMARY KEY ( user_id );
 
-ALTER TABLE users ADD CONSTRAINT usersname_uk UNIQUE ( username,
-                                                       email );
+ALTER TABLE users ADD CONSTRAINT email_uk UNIQUE ( email );
+
+ALTER TABLE users ADD CONSTRAINT usersname_uk UNIQUE ( username );
 
 ALTER TABLE music_albums
     ADD CONSTRAINT music_albums_music_artists_fk FOREIGN KEY ( artist_id )

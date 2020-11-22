@@ -10,18 +10,29 @@ class DBConnection:
     Handles any databases errors.
     """
 
-    def __init__(self, host: str, port: str, service: str = ''):
+    def __init__(self, host: str, port: str, service: str = '', user: str = '', password: str = ''):
         self.host = host
         self.port = port
         self.service = service
+        self.user = user
+        self.password = password
         self.dsn_tns = cx_Oracle.makedsn(self.host, self.port, service_name=self.service)
         self.connection = None
         self.cursor = None
         self.is_connected = False
 
-    def connect(self, user: str, password: str):
+    def __enter__(self):
+        self.connect()
+        return self
+
+    def __exit__(self, exc_type, exc_val, exc_tb):
+        self.disconnect()
+        if exc_type:
+            logging.exception(f"{exc_type}: {exc_val} -> {exc_tb}")
+
+    def connect(self):
         try:
-            self.connection = cx_Oracle.connect(user=user, password=password, dsn=self.dsn_tns)
+            self.connection = cx_Oracle.connect(user=self.user, password=self.password, dsn=self.dsn_tns)
             self.is_connected = True
             logging.info("Connected to database")
         except cx_Oracle.Error as err:
@@ -65,4 +76,3 @@ class DBConnection:
             self.cursor.close()
         except cx_Oracle.Error as err:
             logging.error(f"Database error: {err}")
-

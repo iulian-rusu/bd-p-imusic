@@ -5,7 +5,7 @@ import logging
 from src.application import Application
 from src.back.db_connetcion import DBConnection
 
-logging.basicConfig(level=logging.DEBUG, format='[%(levelname)s]@%(asctime)s: %(message)s')
+logging.basicConfig(level=logging.DEBUG, format='[%(levelname)s]@%(asctime)s:\t%(message)s')
 
 
 def parse_args():
@@ -28,22 +28,8 @@ def parse_args():
     return arguments
 
 
-def on_closing(conn: DBConnection, wnd: Application):
-    # handler for window close event - closes the database connection
-    def close():
-        conn.disconnect()
-        wnd.destroy()
-
-    return close
-
-
 if __name__ == '__main__':
-    # parse comand line arguments
     args = parse_args()
-    # create database connection
-    db_connection = DBConnection(host=args.host, port=args.port, service=args.service)
-    db_connection.connect(user=args.username, password=args.password)
-    # start the app
-    app = Application(db_connection)
-    app.protocol("WM_DELETE_WINDOW", on_closing(db_connection, app))
-    app.mainloop()
+    with DBConnection(args.host, args.port, args.service, user=args.username, password=args.password) as db_connection:
+        app = Application(db_connection)
+        app.mainloop()

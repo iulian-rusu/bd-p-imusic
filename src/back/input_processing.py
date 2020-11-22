@@ -3,8 +3,7 @@ from pbkdf2 import PBKDF2
 
 
 def sanitize(user_input: str) -> str:
-    # escapes single quotes in user input
-    return user_input.replace('\'', '\'\'')
+    return str(user_input).replace('\'', '\'\'')
 
 
 class KeyDerivator(metaclass=abc.ABCMeta):

@@ -19,7 +19,7 @@ class TransactionView(TableView, ABC):
         query = f'''
         SELECT	MUSIC_ALBUMS.NAME ,
                 COUNT(SONGS.SONG_ID), 
-                TO_CHAR(TRANSACTIONS."date", 'dd Mon yyyy'),
+                TO_CHAR(TRANSACTIONS."date", 'dd Mon yyyy HH24:MI:SS'),
                 '$'||TRANSACTIONS.AMOUNT
         FROM TRANSACTIONS
         INNER JOIN USERS ON TRANSACTIONS.USER_ID = USERS.USER_ID
@@ -35,7 +35,7 @@ class TransactionView(TableView, ABC):
         query = f'''
         SELECT	MUSIC_ALBUMS.NAME ,
                 COUNT(SONGS.SONG_ID),
-                TO_CHAR(TRANSACTIONS."date", 'dd Mon yyyy'),
+                TO_CHAR(TRANSACTIONS."date", 'dd Mon yyyy HH24:MI:SS'),
                 '$'||TRANSACTIONS.AMOUNT
         FROM TRANSACTIONS
         INNER JOIN USERS ON TRANSACTIONS.USER_ID = USERS.USER_ID

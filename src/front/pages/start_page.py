@@ -6,7 +6,7 @@ import datetime
 
 from src.back.user import User
 from src.front.pages.base_page import BasePage
-from src.front.custom_button import CustomButton
+from src.front.utils import CustomButton
 
 
 class StartPage(BasePage, ABC):
@@ -27,17 +27,8 @@ class StartPage(BasePage, ABC):
     def on_log_in(self):
         username = self.username_entry.get()
         password = self.password_entry.get()
-        if self.master.log_in_user(username, password):
-            # log in was successful
-            logging.info(f"User '{username}' logged in")
-            self.master.show_page('home')
-        else:
-            logging.info(f"Failed log in for username: '{username}'")
-            # change entry color to red to signal invalid credentials
-            self.username_entry.config(fg='red')
-            self.password_entry.config(fg='red')
-            # change color back after a short delay
-            self.config_after_delay(delay=0.5, components=[self.username_entry, self.password_entry], fg='black')
+        if not self.master.log_in_user(username, password):
+            self.login_btn.display_message('invalid', delay=1)
 
     def on_register(self):
         try:
@@ -77,17 +68,12 @@ class StartPage(BasePage, ABC):
             if user_to_register.has_empty_fields():
                 raise ValueError("not all input fields completed")
             # try to load user data into database
-            if self.master.register_user(user_to_register):
-                logging.info(f"New user registered: '{username}'")
-                self.master.show_page('home')
-            else:
+            if not self.master.register_user(user_to_register):
                 raise ValueError("unable to insert user into database")
         except ValueError as err:
             # handle wrong input
             logging.error(f"Failed to register new user: {err}")
-            self.reg_btn.config(foreground='red')
-            # change color back after a short delay
-            self.config_after_delay(delay=0.5, components=[self.reg_btn], foreground='black')
+            self.reg_btn.display_message('error', delay=1)
 
     def build_gui(self):
         # log-in frame
@@ -105,12 +91,14 @@ class StartPage(BasePage, ABC):
         self.username_entry = tk.Entry(self.login_frame, font=BasePage.LIGHT_FONT)
         self.username_entry.config(relief='flat')
         self.username_entry.grid(column='1', padx='20', pady='20', row='1')
+        self.username_entry.bind('<Return>', lambda event: self.on_log_in())
         self.password_lbl = tk.Label(self.login_frame)
         self.password_lbl.config(background='#d3d3d3', font=BasePage.LIGHT_FONT, text='password:')
         self.password_lbl.grid(padx='15', pady='20', row='2', sticky='e')
         self.password_entry = tk.Entry(self.login_frame, show="*", font=BasePage.LIGHT_FONT)
         self.password_entry.config(relief='flat')
         self.password_entry.grid(column='1', padx='20', pady='20', row='2')
+        self.password_entry.bind('<Return>', lambda event: self.on_log_in())
         # log-in button
         self.login_btn = CustomButton(self.login_frame)
         self.login_btn.config(activebackground='#9a9a9a', background='#b1b1b1', font=BasePage.LIGHT_FONT,
@@ -137,7 +125,6 @@ class StartPage(BasePage, ABC):
                                     text='Browse and buy music from one of the largest databases in the world. ',
                                     width='300', background='#c3c3c3')
         self.description_msg.grid(column='0', padx='50', row='2', sticky='w')
-
         # registration frame
         self.register_frame = tk.Frame(self)
         self.register_frame.config(height='800', padx='70', width='400')

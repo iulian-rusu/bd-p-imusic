@@ -4,7 +4,7 @@ from abc import ABC
 
 from src.back.input_processing import sanitize
 from src.front.pages.base_page import BasePage
-from src.front.custom_button import CustomButton
+from src.front.utils import CustomButton
 from src.front.table_views.album_view import AlbumView
 from src.front.table_views.artist_view import ArtistView
 from src.front.table_views.song_view import SongView
@@ -23,6 +23,12 @@ class HomePage(BasePage, ABC):
         # default view button is songs
         self.current_view_btn = None
         self.entries += [self.search_entry]
+        self.selected_album = None
+
+    def reset(self):
+        super().reset()
+        self.account_balance_lbl.config(text=f"balance: ${self.master.user.account_balace/100.0}")
+        self.set_current_view(self.songs_btn)
 
     def on_log_out(self):
         self.master.user = None
@@ -33,12 +39,24 @@ class HomePage(BasePage, ABC):
         self.table_views[self.current_view_btn].load_searched_rows(key=user_input, connection=self.master.db_connection)
 
     def on_buy(self):
-        # TODO: create new transaction and update user data
-        pass
+        if self.selected_album:
+            album_name, price, artist_name = self.selected_album
+            if self.master.buy_album(album_name, price, artist_name):
+                self.account_balance_lbl.config(text=f"balance: ${self.master.user.account_balace / 100.0}")
+                self.buy_btn.display_message('success', delay=1, background='#59c872', final_state='disabled')
+            else:
+                self.buy_btn.display_message('error', delay=1, final_state='disabled')
 
     def on_album_select(self, event):
-        # TODO: check if the 'buy' button should activate
-        pass
+        if self.buy_btn['text'] != 'buy album':
+            return
+        self.selected_album = self.table_views[self.albums_btn].get_selected_album_data(event)
+        if self.selected_album:
+            album_price = self.selected_album[1]
+            if self.master.user.account_balace >= int(float(album_price) * 100):
+                self.buy_btn.config(state='normal')
+            else:
+                self.buy_btn.config(state='disabled')
 
     def on_album_open(self, event):
         self.set_current_view(self.songs_btn, load=False)
@@ -59,26 +77,20 @@ class HomePage(BasePage, ABC):
         if load:
             # load table content if necessary
             self.table_views[self.current_view_btn].load_all_rows(self.master.db_connection)
+        self.buy_btn.config(state='disabled')
         self.table_views[self.current_view_btn].tkraise()
 
     def search_by_parent(self, parent_view: TableView, event):
-        # get the index id of the album to be searched
         parent_iid = parent_view.identify_row(event.y)
         if parent_iid != '':
-            # get the name of the album
             parent_name = parent_view.item(parent_iid)['values'][0]
-            # search for songs whose parent (album) matches the name
+            # search for entities whose parent matches the search criteria
             self.table_views[self.current_view_btn].load_searched_rows(key='', parent=parent_name,
                                                                        connection=self.master.db_connection)
             self.search_entry.insert('end', parent_name)
 
     def on_account(self):
         self.master.show_page('account')
-
-    def reset(self):
-        super().reset()
-        self.account_balance_lbl.config(text=f"balance: ${self.master.user.account_balace/100.0}")
-        self.set_current_view(self.songs_btn)
 
     def build_gui(self):
         # top menu
@@ -159,6 +171,7 @@ class HomePage(BasePage, ABC):
         }
         # add callbacks to tables
         self.table_views[self.albums_btn].bind('<Double 1>', self.on_album_open)
+        self.table_views[self.albums_btn].bind('<Button 1>', self.on_album_select)
         self.table_views[self.artists_btn].bind('<Double 1>', self.on_artist_open)
         # place tables in frame
         for view in self.table_views.values():
