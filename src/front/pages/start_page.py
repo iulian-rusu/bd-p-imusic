@@ -25,30 +25,30 @@ class StartPage(BasePage, ABC):
         ]
 
     def on_log_in(self):
-        username = self.username_entry.get()
-        password = self.password_entry.get()
+        username = self.username_entry.get().strip()
+        password = self.password_entry.get().strip()
         if not self.master.log_in_user(username, password):
             self.login_btn.display_message('invalid', delay=1)
 
     def on_register(self):
         try:
             # check passwords
-            password = self.password_reg_entry.get()
-            password_conf = self.password_conf_entry.get()
+            password = self.password_reg_entry.get().strip()
+            password_conf = self.password_conf_entry.get().strip()
             if len(password) < User.MIN_PASS_LEN:
                 raise ValueError("password too short")
             if password != password_conf:
                 raise ValueError("passwords don't match")
             # get other user data
-            username = self.username_reg_entry.get()
-            first_name = self.first_name_entry.get().title()
-            last_name = self.last_name_entry.get().title()
-            email = self.email_entry.get()
+            username = self.username_reg_entry.get().strip()
+            first_name = self.first_name_entry.get().title().strip()
+            last_name = self.last_name_entry.get().title().strip()
+            email = self.email_entry.get().strip()
             # email is optional - check if it is specified and replace it with 'NULL' if not
             if len(email) == 0:
                 email = User.NO_EMAIL
             # card_nr must be numeric and of length 16
-            card_nr = self.card_nr_entry.get()
+            card_nr = self.card_nr_entry.get().strip()
             if not (len(card_nr) == 16 and card_nr.isalnum()):
                 raise ValueError("card number must be 16 digits long")
             # check if all date spinboxes are specified

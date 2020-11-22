@@ -37,7 +37,7 @@ class HomePage(BasePage, ABC):
         self.master.show_page('start')
 
     def on_search(self):
-        user_input = sanitize(self.search_entry.get())
+        user_input = sanitize(self.search_entry.get().strip())
         self.table_views[self.current_view_btn].load_searched_rows(key=user_input, connection=self.master.db_connection)
 
     def on_buy(self):
@@ -61,14 +61,18 @@ class HomePage(BasePage, ABC):
                 self.buy_btn.config(state='disabled')
 
     def on_album_open(self, event):
-        self.set_current_view(self.songs_btn, load=False)
-        self.search_entry.insert(0, 'album: ')
-        self.search_by_parent(parent_view=self.table_views[self.albums_btn], event=event)
+        parent_iid = self.table_views[self.albums_btn].identify_row(event.y)
+        if parent_iid != '':
+            self.set_current_view(self.songs_btn, load=False)
+            self.search_entry.insert(0, 'album: ')
+            self.search_by_parent(self.table_views[self.albums_btn], parent_iid)
 
     def on_artist_open(self, event):
-        self.set_current_view(self.albums_btn, load=False)
-        self.search_entry.insert(0, 'artist: ')
-        self.search_by_parent(parent_view=self.table_views[self.artists_btn], event=event)
+        parent_iid = self.table_views[self.artists_btn].identify_row(event.y)
+        if parent_iid != '':
+            self.set_current_view(self.albums_btn, load=False)
+            self.search_entry.insert(0, 'artist: ')
+            self.search_by_parent(self.table_views[self.artists_btn], parent_iid)
 
     def set_current_view(self, new_btn: CustomButton, load: bool = True):
         if self.current_view_btn:
@@ -82,14 +86,12 @@ class HomePage(BasePage, ABC):
         self.buy_btn.config(state='disabled')
         self.table_views[self.current_view_btn].tkraise()
 
-    def search_by_parent(self, parent_view: TableView, event):
-        parent_iid = parent_view.identify_row(event.y)
-        if parent_iid != '':
-            parent_name = parent_view.item(parent_iid)['values'][0]
-            # search for entities whose parent matches the search criteria
-            self.table_views[self.current_view_btn].load_searched_rows(key='', parent=parent_name,
-                                                                       connection=self.master.db_connection)
-            self.search_entry.insert('end', parent_name)
+    def search_by_parent(self, parent_view: TableView, parent_iid):
+        parent_name = parent_view.item(parent_iid)['values'][0]
+        # search for entities whose parent matches the search criteria
+        self.table_views[self.current_view_btn].load_searched_rows(key='', parent=parent_name,
+                                                                   connection=self.master.db_connection)
+        self.search_entry.insert('end', parent_name)
 
     def on_account(self):
         self.master.show_page('account')

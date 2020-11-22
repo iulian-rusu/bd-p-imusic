@@ -119,8 +119,8 @@ class AccountPage(BasePage, ABC):
 
     def on_validate(self):
         try:
-            amount = self.amount_entry.get()
-            verif = self.verif_entry.get()
+            amount = self.amount_entry.get().strip()
+            verif = self.verif_entry.get().strip()
             # verification code not actually implemented, just a placeholder mechanism
             if not verif.isnumeric():
                 raise ValueError("varification code must be numeric")
@@ -154,7 +154,7 @@ class AccountPage(BasePage, ABC):
         user = self.master.user
         # try to save data to database
         username, first_name, last_name, email, old_pass, new_pass, new_pass_conf \
-            = [e.get() for e in self.personal_entries]
+            = [e.get().strip() for e in self.personal_entries]
         first_name = first_name.title()
         last_name = last_name.title()
         try:

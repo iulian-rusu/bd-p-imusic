@@ -36,4 +36,3 @@ class Transaction:
         END;
         """
         return db_connection.exec_command(command)
-
