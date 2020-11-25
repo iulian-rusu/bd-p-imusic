@@ -38,7 +38,7 @@ class AccountPage(BasePage, ABC):
         self.current_view_btn = None
 
     def reset(self):
-        super().reset()
+        BasePage.reset(self)
         # hide widgets that need to be toggled
         for label in self.personal_toggled_lbls:
             label.config(state='disabled')
@@ -47,7 +47,7 @@ class AccountPage(BasePage, ABC):
         self.load_account_data()
         for entry in self.entries:
             entry.config(state='readonly')
-        self.account_balance_lbl.config(text=f"balance: ${self.master.user.account_balace / 100.0}")
+        self.account_balance_lbl.config(text=f'balance: ${self.master.user.account_balace / 100.0}')
         self.on_personal_info_view()
 
     def on_home(self):
@@ -67,7 +67,7 @@ class AccountPage(BasePage, ABC):
         if not self.selected_transaction:
             return
         if self.master.refund_transaction(self.selected_transaction.tr_id, self.selected_transaction.amount):
-            self.account_balance_lbl.config(text=f"balance: ${self.master.user.account_balace / 100.0}")
+            self.account_balance_lbl.config(text=f'balance: ${self.master.user.account_balace / 100.0}')
             self.transaction_view.delete_selected_row()
             self.selected_transaction = None
             self.refund_btn.config(state='disabled', background='#59c872')
@@ -91,20 +91,24 @@ class AccountPage(BasePage, ABC):
             entry.config(state='normal')
 
     def on_validate(self):
+        self.validate_btn.config(state='disabled')
+        self.validate_routine()
+
+    def validate_routine(self):
         try:
             amount = self.amount_entry.get().strip()
             verif = self.verif_entry.get().strip()
             # verification code not actually implemented, just a placeholder mechanism
             if not verif.isnumeric():
-                raise ValueError("varification code must be numeric")
+                raise ValueError('varification code must be numeric')
             # update funds in database
             if self.master.add_user_funds(amount):
                 self.validate_btn.display_message('success', delay=0.5, background='#59c872', final_state='disabled')
-                self.account_balance_lbl.config(text=f"balance: ${self.master.user.account_balace / 100.0}")
+                self.account_balance_lbl.config(text=f'balance: ${self.master.user.account_balace / 100.0}')
             else:
                 raise ValueError('databases error')
         except (ValueError, OverflowError) as err:
-            logging.error(f"Failed to add funds to account: {err}")
+            logging.error(f'Failed to add funds to account: {err}')
             self.validate_btn.display_message('error', delay=0.5, final_state='disabled')
         for label in self.payment_toggled_lbls:
             label.config(state='disabled')
@@ -121,6 +125,7 @@ class AccountPage(BasePage, ABC):
                 label.config(state='normal')
         else:
             self.is_editing_personal_info = False
+            self.edit_personal_info_btn.config(state='disabled')
             self.save_personal_info()
 
     def set_current_view(self, new_btn: CustomButton):
@@ -149,18 +154,18 @@ class AccountPage(BasePage, ABC):
             if len(old_pass):
                 # attempt to change user password
                 if not user.match_password(old_pass):
-                    raise ValueError("old password incorrect")
+                    raise ValueError('old password incorrect')
                 if len(new_pass) < user.MIN_PASS_LEN or new_pass != new_pass_conf:
-                    raise ValueError("new passwords don't match")
+                    raise ValueError('new passwords don\'t match')
             elif len(new_pass):
-                raise ValueError("old password required to change password")
+                raise ValueError('old password required to change password')
             # update in database
             if self.master.update_user(username, first_name, last_name, email, new_pass):
-                logging.info("Successfully updated user data")
+                logging.info('Successfully updated user data')
             else:
                 raise RuntimeError('database could not update data')
         except (ValueError, RuntimeError) as err:
-            logging.error(f"Failed to edit personal data: {err}")
+            logging.error(f'Failed to edit personal data: {err}')
             self.edit_personal_info_btn.display_message('error', delay=0.5)
         self.reset()
 

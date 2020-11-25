@@ -55,15 +55,15 @@ class Application(tk.Tk):
             self.show_page('home')
         return flag
 
-    def buy_album(self, album_id: str, price: str) -> bool:
-        if Transaction.make_transaction(self.user.username, album_id, price, self.db_connection):
-            self.user.account_balace -= int(float(price) * 100)
+    def buy_album(self, album_id: str, album_price: str) -> bool:
+        if Transaction.make_transaction(self.user.username, album_id, album_price, self.db_connection):
+            self.user.account_balace -= int(float(album_price) * 100)
             return True
         return False
 
-    def refund_transaction(self, tr_id: str, price: str) -> bool:
-        if Transaction.refund_transaction(self.user.username, tr_id, price, self.db_connection):
-            self.user.account_balace += int(float(price) * 100)
+    def refund_transaction(self, tr_id: str, amount: str) -> bool:
+        if Transaction.refund_transaction(self.user.username, tr_id, amount, self.db_connection):
+            self.user.account_balace += int(float(amount) * 100)
             return True
         return False
 

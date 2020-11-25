@@ -26,7 +26,7 @@ class HomePage(BasePage, ABC):
 
     def reset(self):
         super().reset()
-        self.account_balance_lbl.config(text=f"balance: ${self.master.user.account_balace/100.0}")
+        self.account_balance_lbl.config(text=f'balance: ${self.master.user.account_balace/100.0}')
         self.set_current_view(self.songs_btn)
 
     def on_log_out(self):
@@ -37,8 +37,9 @@ class HomePage(BasePage, ABC):
         self.master.show_page('account')
 
     def on_buy(self):
-        if self.selected_album and self.master.buy_album(self.selected_album.album_id, self.selected_album.album_price):
-            self.account_balance_lbl.config(text=f"balance: ${self.master.user.account_balace / 100.0}")
+        album_price, album_id = self.selected_album.album_price, self.selected_album.album_id
+        if self.selected_album and self.master.buy_album(album_id=album_id, album_price=album_price):
+            self.account_balance_lbl.config(text=f'balance: ${self.master.user.account_balace / 100.0}')
             self.buy_btn.display_message('success', delay=0.5, background='#59c872')
             self.selected_album = None
         else:
@@ -57,18 +58,18 @@ class HomePage(BasePage, ABC):
     def on_album_open(self, event):
         parent_iid = self.table_views[self.albums_btn].identify_row(event.y)
         if parent_iid != '':
-            parent_name = self.table_views[self.albums_btn].item(parent_iid)['values'][0]
+            parent_name, parent_id = self.table_views[self.albums_btn].get_name_and_id(parent_iid)
             self.set_current_view(self.songs_btn, load=False)
-            self.search_entry.insert(0, 'album: ')
-            self.search_by_parent(parent_name)
+            self.search_entry.insert(0, f'album: {parent_name}')
+            self.search_by_parent_id(parent_id)
 
     def on_artist_open(self, event):
         parent_iid = self.table_views[self.artists_btn].identify_row(event.y)
         if parent_iid != '':
-            parent_name = self.table_views[self.artists_btn].item(parent_iid)['values'][0]
+            parent_name, parent_id = self.table_views[self.artists_btn].get_name_and_id(parent_iid)
             self.set_current_view(self.albums_btn, load=False)
-            self.search_entry.insert(0, 'artist: ')
-            self.search_by_parent(parent_name)
+            self.search_entry.insert(0, f'artist: {parent_name}')
+            self.search_by_parent_id(parent_id)
 
     def set_current_view(self, new_btn: CustomButton, load: bool = True):
         if self.current_view_btn:
@@ -77,20 +78,19 @@ class HomePage(BasePage, ABC):
         self.search_entry.delete(0, 'end')
         self.current_view_btn = new_btn
         if load:
-            # load table content if necessary
-            self.table_views[self.current_view_btn].load_all_rows(self.master.db_connection)
+            current_table_view = self.table_views[self.current_view_btn]
+            current_table_view.load_all_rows(self.master.db_connection)
         self.buy_btn.config(state='disabled')
         self.table_views[self.current_view_btn].tkraise()
 
-    def search_by_parent(self, parent_name: str):
+    def search_by_parent_id(self, parent_id: str):
         # search for entities whose parent matches the search criteria
-        self.table_views[self.current_view_btn].load_searched_rows(key='', parent=parent_name,
-                                                                   connection=self.master.db_connection)
-        self.search_entry.insert('end', parent_name)
+        self.table_views[self.current_view_btn].load_rows_by_parent_id(parent_id, self.master.db_connection)
 
     def on_search(self):
         user_input = sanitize(self.search_entry.get().strip())
-        self.table_views[self.current_view_btn].load_searched_rows(key=user_input, connection=self.master.db_connection)
+        current_table_view = self.table_views[self.current_view_btn]
+        current_table_view.load_searched_rows(user_input, self.master.db_connection)
 
     def build_gui(self):
         # top menu
