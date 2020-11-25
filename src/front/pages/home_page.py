@@ -77,11 +77,12 @@ class HomePage(BasePage, ABC):
         new_btn.config(font=BasePage.UNDERLINED_BOLD_FONT, background='#c1c1c1')
         self.search_entry.delete(0, 'end')
         self.current_view_btn = new_btn
-        if load:
-            current_table_view = self.table_views[self.current_view_btn]
-            current_table_view.load_all_rows(self.master.db_connection)
         self.buy_btn.config(state='disabled')
-        self.table_views[self.current_view_btn].tkraise()
+        current_table_view = self.table_views[self.current_view_btn]
+        current_table_view.tkraise()
+        if load:
+            # the GUI is buggy if I run this as a backgrond task
+            current_table_view.load_all_rows(self.master.db_connection)
 
     def search_by_parent_id(self, parent_id: str):
         # search for entities whose parent matches the search criteria

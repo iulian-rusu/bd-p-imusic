@@ -92,9 +92,9 @@ class AccountPage(BasePage, ABC):
 
     def on_validate(self):
         self.validate_btn.config(state='disabled')
-        self.validate_routine()
+        self.validate_task()
 
-    def validate_routine(self):
+    def validate_task(self):
         try:
             amount = self.amount_entry.get().strip()
             verif = self.verif_entry.get().strip()

@@ -1,9 +1,15 @@
 import abc
 from pbkdf2 import PBKDF2
 
+SPECIAL_CHARS = {
+    '\'': '\'\'',
+    '%': '\\%',
+    '_': '\\_'
+}
+
 
 def sanitize(user_input: str) -> str:
-    return str(user_input).replace('\'', '\'\'')
+    return ''.join(map(lambda char: SPECIAL_CHARS.get(char, char), str(user_input)))
 
 
 class KeyDerivator(metaclass=abc.ABCMeta):

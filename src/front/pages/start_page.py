@@ -27,13 +27,20 @@ class StartPage(BasePage, ABC):
     def on_log_in(self):
         username = self.username_entry.get().strip()
         password = self.password_entry.get().strip()
-        if not self.master.log_in_user(username, password):
-            self.login_btn.display_message('invalid', delay=1)
+
+        def log_in_task():
+            self.login_btn.config(state='disabled')
+            if self.master.log_in_user(username, password):
+                self.login_btn.config(state='normal')
+            else:
+                self.login_btn.display_message('invalid', delay=1)
+
+        self.master.run_background_task(log_in_task)
 
     def on_register(self):
-        self.register_routine()
+        self.master.run_background_task(self.register_task())
 
-    def register_routine(self):
+    def register_task(self):
         try:
             # check passwords
             password = self.password_reg_entry.get().strip()

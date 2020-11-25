@@ -1,6 +1,8 @@
 import logging
 import tkinter as tk
+from typing import Callable
 
+from src.back.back_thread import BackThread
 from src.back.db_connetcion import DBConnection
 from src.back.transaction_processing import Transaction
 from src.back.user import User
@@ -18,6 +20,7 @@ class Application(tk.Tk):
     def __init__(self, db_connection: DBConnection, *args, **kwargs):
         tk.Tk.__init__(self, *args, **kwargs)
         self.db_connection = db_connection
+        self.back_thread = BackThread()
         # dcitionary with all app pages
         self.pages = {
             'start': StartPage(title='Welcome to iMusic', master=self),
@@ -28,6 +31,18 @@ class Application(tk.Tk):
         self.user = None
         self.resizable(False, False)
         self.show_page('start')
+
+    def mainloop(self, n=0):
+        self.back_thread.start()
+        tk.Tk.mainloop(self, n)
+
+    def destroy(self):
+        # thread commits sudoku
+        self.back_thread.add_task(self.back_thread.stop)
+        tk.Tk.destroy(self)
+
+    def run_background_task(self, task: Callable):
+        self.back_thread.add_task(task)
 
     def show_page(self, frame_name: str):
         try:
