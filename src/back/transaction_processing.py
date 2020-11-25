@@ -1,8 +1,13 @@
+from collections import namedtuple
+
 from src.back.db_connetcion import DBConnection
 from src.back.input_processing import sanitize
 
 
 class Transaction:
+    AlbumData = namedtuple("AlbumData", ['album_id', 'album_price'])
+    TransactionData = namedtuple("TransactionData", ['tr_id', 'amount'])
+
     @staticmethod
     def make_transaction(username: str, album_id: str, price: str,  connection: DBConnection) -> bool:
         command = f"""
@@ -13,9 +18,7 @@ class Transaction:
 
             INSERT INTO TRANSACTIONS(USER_ID, ALBUM_ID, AMOUNT, "date") VALUES(
                 (SELECT USER_ID FROM USERS WHERE USERNAME='{sanitize(username)}'), 
-                (SELECT ALBUM_ID FROM MUSIC_ALBUMS 
-                INNER JOIN MUSIC_ARTISTS ON MUSIC_ALBUMS.ARTIST_ID=MUSIC_ARTISTS.ARTIST_ID
-                WHERE MUSIC_ALBUMS.ALBUM_ID={album_id}),
+                {album_id},
                 {price}, 
                 SYSDATE
             );

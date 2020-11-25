@@ -36,7 +36,9 @@ class StartPage(BasePage, ABC):
             password = self.password_reg_entry.get().strip()
             password_conf = self.password_conf_entry.get().strip()
             if len(password) < User.MIN_PASS_LEN:
-                raise ValueError("password too short")
+                raise ValueError(f"password must be at least {User.MIN_PASS_LEN} characters")
+            if len(password) > User.MAX_PASS_LEN:
+                raise ValueError(f"password must be at most {User.MAX_PASS_LEN} characters")
             if password != password_conf:
                 raise ValueError("passwords don't match")
             # get other user data
@@ -44,10 +46,10 @@ class StartPage(BasePage, ABC):
             first_name = self.first_name_entry.get().title().strip()
             last_name = self.last_name_entry.get().title().strip()
             email = self.email_entry.get().strip()
-            # email is optional - check if it is specified and replace it with 'NULL' if not
+            # email is optional - check if it is specified
             if len(email) == 0:
-                email = User.NO_EMAIL
-            # card_nr must be numeric and of length 16
+                email = User.NO_EMAIL_MSG
+            # check card number
             card_nr = self.card_nr_entry.get().strip()
             if not (len(card_nr) == 16 and card_nr.isalnum()):
                 raise ValueError("card number must be 16 digits long")
@@ -71,7 +73,6 @@ class StartPage(BasePage, ABC):
             if not self.master.register_user(user_to_register):
                 raise ValueError("unable to insert user into database")
         except ValueError as err:
-            # handle wrong input
             logging.error(f"Failed to register new user: {err}")
             self.reg_btn.display_message('error', delay=1)
 
@@ -99,7 +100,7 @@ class StartPage(BasePage, ABC):
         self.password_entry.config(relief='flat')
         self.password_entry.grid(column='1', padx='20', pady='20', row='2')
         self.password_entry.bind('<Return>', lambda event: self.on_log_in())
-        # log-in button
+        # 'log-in' button
         self.login_btn = CustomButton(self.login_frame)
         self.login_btn.config(activebackground='#9a9a9a', background='#b1b1b1', font=BasePage.LIGHT_FONT,
                               relief='flat')
@@ -213,7 +214,7 @@ class StartPage(BasePage, ABC):
         self.day_lbl.grid(column='0', row='2', sticky='e')
         self.exp_date_frame.config(height='200', width='400')
         self.exp_date_frame.grid(column='1', padx='5', pady='5', row='9')
-        # register button
+        # 'register' button
         self.reg_btn = CustomButton(self.register_frame)
         self.reg_btn.config(activebackground='#9a9a9a', background='#b1b1b1', font=BasePage.LIGHT_FONT,
                             relief='flat')

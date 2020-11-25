@@ -15,7 +15,7 @@ class AlbumView(TableView, ABC):
         self.heading(3, text="artist")
         self.heading(4, text="no. songs")
         self.heading(5, text="release date")
-        self.heading(6, text="album_id")
+        self.heading(6, text="album_id")  # this one is hidden
         self['displaycolumns'] = self['columns'][:-1]
 
     def get_selected_album_data(self, event) -> Optional[Tuple[str, str]]:

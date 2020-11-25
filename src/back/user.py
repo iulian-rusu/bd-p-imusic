@@ -5,8 +5,9 @@ from src.back.input_processing import sanitize, KeyDerivator
 
 
 class User:
-    NO_EMAIL = 'unspecified'
+    NO_EMAIL_MSG = 'unspecified'
     MIN_PASS_LEN = 8
+    MAX_PASS_LEN = 30
 
     def __init__(self, username: str, first_name: str, last_name: str, hashed_password: str, email: str,
                  card_nr: str, expiration_date: str, account_balance: str, card_type: str):
@@ -15,7 +16,7 @@ class User:
         self.first_name = first_name
         self.last_name = last_name
         self.__hashed_password = hashed_password
-        self.email = email if email else User.NO_EMAIL
+        self.email = email if email else User.NO_EMAIL_MSG
         # payment info
         self.card_nr = card_nr
         self.expiration_date = expiration_date
@@ -36,11 +37,9 @@ class User:
         return KeyDerivator.get_hash(sanitize(password)) == self.__hashed_password
 
     def register(self, db_connection: DBConnection) -> bool:
-        # sanitize fields
         username, first_name, last_name, password, email, card_nr, expiration_date, account_balance, card_type \
             = [sanitize(str(attr)) for attr in vars(self).values()]
         self.__hashed_password = KeyDerivator.get_hash(password)
-        # get hashed password
         command = f"""
         BEGIN 
             INSERT INTO USERS (USERNAME, FIRST_NAME, LAST_NAME, PASSWORD, EMAIL) VALUES (
@@ -48,7 +47,7 @@ class User:
                     '{first_name}', 
                     '{last_name}', 
                     '{self.__hashed_password}', 
-                    NULLIF('{email}', '{User.NO_EMAIL}')
+                    NULLIF('{email}', '{User.NO_EMAIL_MSG}')
             );
             INSERT INTO PAYMENT_INFO(USER_ID, CARD_NR, EXPIRATION_DATE, ACCOUNT_BALANCE, CARD_TYPE_ID) VALUES (
                 (SELECT USER_ID FROM USERS WHERE USERNAME='{username}'), 
@@ -72,7 +71,7 @@ class User:
             USERNAME='{sanitize(username)}',
             FIRST_NAME='{sanitize(first_name)}',
             LAST_NAME='{sanitize(last_name)}',
-            EMAIL=NULLIF('{sanitize(email)}','{User.NO_EMAIL}'), 
+            EMAIL=NULLIF('{sanitize(email)}','{User.NO_EMAIL_MSG}'), 
             PASSWORD='{password}' 
             WHERE USERNAME='{self.username}'
         """

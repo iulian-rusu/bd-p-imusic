@@ -12,7 +12,7 @@ from src.front.pages.start_page import StartPage
 class Application(tk.Tk):
     """
     Top level view of the application.
-    Contains and displays GUI pages. Handles database connection and user information.
+    Contains objects that manage the GUI, database connection and user data.
     """
 
     def __init__(self, db_connection: DBConnection, *args, **kwargs):
@@ -30,11 +30,9 @@ class Application(tk.Tk):
         self.show_page('start')
 
     def show_page(self, frame_name: str):
-        # sets the specified page as the current active page
         try:
             self.active_page = self.pages[frame_name]
             self.title(self.active_page.title)
-            # reset necessary widgets in the current active page
             self.active_page.reset()
             self.active_page.tkraise()
         except KeyError as e:

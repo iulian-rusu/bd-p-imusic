@@ -1,15 +1,14 @@
 import tkinter as tk
 import tkinter.ttk as ttk
 from abc import ABC
-from collections import namedtuple
 
 from src.back.input_processing import sanitize
+from src.back.transaction_processing import Transaction
 from src.front.pages.base_page import BasePage
 from src.front.utils import CustomButton
 from src.front.table_views.album_view import AlbumView
 from src.front.table_views.artist_view import ArtistView
 from src.front.table_views.song_view import SongView
-from src.front.table_views.table_view import TableView
 
 
 class HomePage(BasePage, ABC):
@@ -17,15 +16,13 @@ class HomePage(BasePage, ABC):
     The home page of the application.
     Contains the music catalog and allows the user to navigate to their account page.
     """
-    AlbumData = namedtuple("AlbumData", ['album_id', 'album_price'])
 
     def __init__(self, *args, **kwargs):
         BasePage.__init__(self, *args, **kwargs)
         self.build_gui()
-        # default view button is songs
-        self.current_view_btn = None
         self.entries += [self.search_entry]
         self.selected_album = None
+        self.current_view_btn = None
 
     def reset(self):
         super().reset()
@@ -36,9 +33,8 @@ class HomePage(BasePage, ABC):
         self.master.user = None
         self.master.show_page('start')
 
-    def on_search(self):
-        user_input = sanitize(self.search_entry.get().strip())
-        self.table_views[self.current_view_btn].load_searched_rows(key=user_input, connection=self.master.db_connection)
+    def on_account(self):
+        self.master.show_page('account')
 
     def on_buy(self):
         if self.selected_album and self.master.buy_album(self.selected_album.album_id, self.selected_album.album_price):
@@ -49,13 +45,11 @@ class HomePage(BasePage, ABC):
             self.buy_btn.display_message('error', delay=0.5, final_state='disabled')
 
     def on_album_select(self, event):
-        if self.buy_btn['text'] != 'buy album':
-            return
         album_data = self.table_views[self.albums_btn].get_selected_album_data(event)
         if album_data:
-            self.selected_album = HomePage.AlbumData(*album_data)
-            album_price = self.selected_album.album_price
-            if self.master.user.account_balace >= int(float(album_price) * 100):
+            self.selected_album = Transaction.AlbumData(*album_data)
+            album_price = int(float(self.selected_album.album_price) * 100)
+            if self.buy_btn['text'] == 'buy album' and self.master.user.account_balace >= album_price:
                 self.buy_btn.config(state='normal')
             else:
                 self.buy_btn.config(state='disabled')
@@ -63,16 +57,18 @@ class HomePage(BasePage, ABC):
     def on_album_open(self, event):
         parent_iid = self.table_views[self.albums_btn].identify_row(event.y)
         if parent_iid != '':
+            parent_name = self.table_views[self.albums_btn].item(parent_iid)['values'][0]
             self.set_current_view(self.songs_btn, load=False)
             self.search_entry.insert(0, 'album: ')
-            self.search_by_parent(self.table_views[self.albums_btn], parent_iid)
+            self.search_by_parent(parent_name)
 
     def on_artist_open(self, event):
         parent_iid = self.table_views[self.artists_btn].identify_row(event.y)
         if parent_iid != '':
+            parent_name = self.table_views[self.artists_btn].item(parent_iid)['values'][0]
             self.set_current_view(self.albums_btn, load=False)
             self.search_entry.insert(0, 'artist: ')
-            self.search_by_parent(self.table_views[self.artists_btn], parent_iid)
+            self.search_by_parent(parent_name)
 
     def set_current_view(self, new_btn: CustomButton, load: bool = True):
         if self.current_view_btn:
@@ -86,15 +82,15 @@ class HomePage(BasePage, ABC):
         self.buy_btn.config(state='disabled')
         self.table_views[self.current_view_btn].tkraise()
 
-    def search_by_parent(self, parent_view: TableView, parent_iid):
-        parent_name = parent_view.item(parent_iid)['values'][0]
+    def search_by_parent(self, parent_name: str):
         # search for entities whose parent matches the search criteria
         self.table_views[self.current_view_btn].load_searched_rows(key='', parent=parent_name,
                                                                    connection=self.master.db_connection)
         self.search_entry.insert('end', parent_name)
 
-    def on_account(self):
-        self.master.show_page('account')
+    def on_search(self):
+        user_input = sanitize(self.search_entry.get().strip())
+        self.table_views[self.current_view_btn].load_searched_rows(key=user_input, connection=self.master.db_connection)
 
     def build_gui(self):
         # top menu
@@ -137,26 +133,26 @@ class HomePage(BasePage, ABC):
         self.bottom_menu_frame = tk.Frame(self)
         self.bottom_menu_frame.config(background='#c1c1c1', height='40', width='1400')
         self.bottom_menu_frame.grid(column='0', row='2')
-        # 'songs' view
+        # 'songs' button
         self.songs_btn = CustomButton(self.bottom_menu_frame)
         self.songs_btn.config(activebackground='#9a9a9a', background='#d1d1d1',
                               font=BasePage.LIGHT_FONT, relief='flat')
         self.songs_btn.config(state='normal', text='songs', command=lambda: self.set_current_view(self.songs_btn))
         self.songs_btn.place(anchor='nw', height='40', relx='0.142857', width='400', x='0', y='0')
-        # 'albums' view
+        # 'albums' button
         self.albums_btn = CustomButton(self.bottom_menu_frame)
         self.albums_btn.config(activebackground='#9a9a9a', background='#d1d1d1',
                                font=BasePage.LIGHT_FONT, relief='flat')
         self.albums_btn.config(text='albums', command=lambda: self.set_current_view(self.albums_btn))
         self.albums_btn.place(anchor='nw', height='40', relx='0.42857', width='400', x='0', y='0')
-        # 'artists' view
+        # 'artists' button
         self.artists_btn = CustomButton(self.bottom_menu_frame)
         self.artists_btn.config(activebackground='#9a9a9a', background='#d1d1d1',
                                 font=BasePage.LIGHT_FONT, relief='flat')
 
         self.artists_btn.config(text='artists', command=lambda: self.set_current_view(self.artists_btn))
         self.artists_btn.place(anchor='nw', height='40', relwidth='0.0', relx='0.7142857', width='400', x='0', y='0')
-        # 'account' view
+        # 'account' button
         self.account_btn = CustomButton(self.bottom_menu_frame)
         self.account_btn.config(activebackground='#9a9a9a', background='#b1b1b1',
                                 font=BasePage.LIGHT_FONT, relief='flat')
@@ -164,7 +160,7 @@ class HomePage(BasePage, ABC):
         self.account_btn.place(anchor='nw', height='40', relwidth='0.0', relx='0.0', rely='0.0',
                                width='200', x='0', y='0')
 
-        # create tables
+        # create views
         self.content_frame = tk.Frame(self)
         style = ttk.Style()
         style.configure("Treeview.Heading", font=('Bahnschrift Light', 12))
@@ -173,11 +169,11 @@ class HomePage(BasePage, ABC):
             self.albums_btn: AlbumView(master=self.content_frame),
             self.artists_btn: ArtistView(master=self.content_frame)
         }
-        # add callbacks to tables
+        # add callbacks to views
         self.table_views[self.albums_btn].bind('<Double 1>', self.on_album_open)
         self.table_views[self.albums_btn].bind('<Button 1>', self.on_album_select)
         self.table_views[self.artists_btn].bind('<Double 1>', self.on_artist_open)
-        # place tables in frame
+        # place views in frame
         for view in self.table_views.values():
             view.place(anchor='nw', height='591', width='1400', x='0', y='0')
         self.table_views[self.songs_btn].tkraise()

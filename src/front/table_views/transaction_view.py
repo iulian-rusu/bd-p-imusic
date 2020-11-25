@@ -14,16 +14,20 @@ class TransactionView(TableView, ABC):
         self.heading(2, text="no. songs")
         self.heading(3, text="purchased on")
         self.heading(4, text="purchased for")
-        self.heading(5, text="tr_id")
+        self.heading(5, text="tr_id")  # this one is hidden
         self['displaycolumns'] = self['columns'][:-1]
 
-    def get_selected_album_data(self, event) -> Optional[Tuple[str, str]]:
+    def get_selected_transaction_data(self, event) -> Optional[Tuple[str, str]]:
         album_iid = self.identify_row(event.y)
         if album_iid != '':
             album_data = self.item(album_iid)['values']
-            tr_id, album_price = album_data[4], album_data[3]
-            return tr_id, album_price.lstrip('$ ')
+            tr_id, amount = album_data[4], album_data[3]
+            return tr_id, amount.lstrip('$ ')
         return None
+
+    def delete_selected_row(self):
+        selected_item = self.selection()[0]
+        self.delete(selected_item)
 
     def load_all_rows(self, connection: DBConnection):
         # loads all transactions from database, sorted from latest to oldest
