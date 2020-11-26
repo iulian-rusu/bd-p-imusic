@@ -25,18 +25,21 @@ class TransactionView(TableView, ABC):
             return tr_id, amount.lstrip('$ ')
         return None
 
-    def get_name_and_id(self, iid: str):
-        item = self.item(iid)
-        return item['values'][0], item['values'][4]
+    def get_name_and_id(self, iid: str) -> Tuple[str, str]:
+        item = self.item(iid)['values']
+        return item[0], item[4]
 
-    def delete_selected_row(self):
-        selected_item = self.selection()[0]
-        self.delete(selected_item)
+    def delete_transaction_row(self, tr_id: str):
+        selected_items = self.selection()
+        for iid in selected_items:
+            if self.item(iid)['values'][4] == tr_id:
+                self.delete(iid)
+                return
 
-    def load_all_rows(self, connection: DBConnection):
+    def load_all_rows(self, db_connection: DBConnection):
         logging.warning("Attempt to load all transactions for a specific user")
 
-    def load_searched_rows(self, key: str, connection: DBConnection):
+    def load_rows_by_name(self, name: str, db_connection: DBConnection):
         # loads all transactions from database by a specific user, sorted from latest to oldest
         query = f'''
         SELECT	MUSIC_ALBUMS.NAME ,
@@ -48,11 +51,11 @@ class TransactionView(TableView, ABC):
         INNER JOIN USERS ON TRANSACTIONS.USER_ID = USERS.USER_ID
         INNER JOIN MUSIC_ALBUMS ON TRANSACTIONS.ALBUM_ID = MUSIC_ALBUMS.ALBUM_ID
         INNER JOIN SONGS ON SONGS.ALBUM_ID = MUSIC_ALBUMS.ALBUM_ID 
-        WHERE USERS.USERNAME='{key}' 
+        WHERE USERS.USERNAME='{name}' 
         GROUP BY MUSIC_ALBUMS.NAME, TRANSACTIONS."date", TRANSACTIONS.AMOUNT, TRANSACTIONS.TR_ID
         ORDER BY TRANSACTIONS."date" DESC
         '''
-        self._update_content(query, connection)
+        self._update_content(query, db_connection)
 
-    def load_rows_by_parent_id(self, parent_id: str, connection: DBConnection):
+    def load_rows_by_parent_id(self, parent_id: str, db_connection: DBConnection):
         pass

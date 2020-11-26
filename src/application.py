@@ -63,24 +63,18 @@ class Application(tk.Tk):
         return False
 
     def register_user(self, user_to_register: User) -> bool:
-        flag = user_to_register.register(self.db_connection)
-        if flag:
+        has_registered = user_to_register.register(self.db_connection)
+        if has_registered:
             self.user = user_to_register
             logging.info(f"New user registered: '{self.user.username}'")
             self.show_page('home')
-        return flag
+        return has_registered
 
     def buy_album(self, album_id: str, album_price: str) -> bool:
-        if Transaction.make_transaction(self.user.username, album_id, album_price, self.db_connection):
-            self.user.account_balace -= int(float(album_price) * 100)
-            return True
-        return False
+        return Transaction.make_transaction(self.user, album_id, album_price, self.db_connection)
 
     def refund_transaction(self, tr_id: str, amount: str) -> bool:
-        if Transaction.refund_transaction(self.user.username, tr_id, amount, self.db_connection):
-            self.user.account_balace += int(float(amount) * 100)
-            return True
-        return False
+        return Transaction.refund_transaction(self.user, tr_id, amount, self.db_connection)
 
     def update_user(self, username: str, first_name: str, last_name: str, email: str, password: str) -> bool:
         return self.user.update_personal_data(username, first_name, last_name, email, password,

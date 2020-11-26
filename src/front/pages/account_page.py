@@ -68,7 +68,7 @@ class AccountPage(BasePage, ABC):
             return
         if self.master.refund_transaction(self.selected_transaction.tr_id, self.selected_transaction.amount):
             self.account_balance_lbl.config(text=f'balance: ${self.master.user.account_balace / 100.0}')
-            self.transaction_view.delete_selected_row()
+            self.transaction_view.delete_transaction_row(self.selected_transaction.tr_id)
             self.selected_transaction = None
             self.refund_btn.config(state='disabled', background='#59c872')
         else:
@@ -137,7 +137,7 @@ class AccountPage(BasePage, ABC):
         if isinstance(current_view, TableView):
             self.refund_btn.tkraise()
             username_key = sanitize(self.master.user.username)
-            current_view.load_searched_rows(username_key, connection=self.master.db_connection)
+            current_view.load_rows_by_name(username_key, self.master.db_connection)
         else:
             self.add_funds_btn.tkraise()
         current_view.tkraise()

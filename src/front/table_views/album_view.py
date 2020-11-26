@@ -26,10 +26,10 @@ class AlbumView(TableView, ABC):
         return None
 
     def get_name_and_id(self, iid: str) -> Tuple[str, str]:
-        item = self.item(iid)
-        return item['values'][0], item['values'][5]
+        item = self.item(iid)['values']
+        return item[0], item[5]
 
-    def load_all_rows(self, connection: DBConnection):
+    def load_all_rows(self, db_connection: DBConnection):
         # loads all album data from the databases, sorted alphabetically by name
         query = '''
         SELECT	MUSIC_ALBUMS.NAME,
@@ -45,9 +45,9 @@ class AlbumView(TableView, ABC):
         MUSIC_ALBUMS.ALBUM_ID
         ORDER BY MUSIC_ALBUMS.NAME
         '''
-        self._update_content(query, connection)
+        self._update_content(query, db_connection)
 
-    def load_searched_rows(self, key: str, connection: DBConnection):
+    def load_rows_by_name(self, name: str, db_connection: DBConnection):
         query = f'''
         SELECT	MUSIC_ALBUMS.NAME,
                 '$'||MUSIC_ALBUMS.PRICE,
@@ -58,14 +58,14 @@ class AlbumView(TableView, ABC):
         FROM MUSIC_ALBUMS
         INNER JOIN MUSIC_ARTISTS ON MUSIC_ARTISTS.ARTIST_ID = MUSIC_ALBUMS.ARTIST_ID
         INNER JOIN SONGS ON SONGS.ALBUM_ID = MUSIC_ALBUMS.ALBUM_ID
-        WHERE LOWER(MUSIC_ALBUMS.NAME) LIKE LOWER('%{key}%')
+        WHERE LOWER(MUSIC_ALBUMS.NAME) LIKE LOWER('%{name}%')
         GROUP BY MUSIC_ALBUMS.NAME, MUSIC_ARTISTS.NAME, MUSIC_ALBUMS.RELEASE_DATE, MUSIC_ALBUMS.PRICE,
         MUSIC_ALBUMS.ALBUM_ID
         ORDER BY MUSIC_ALBUMS.NAME
         '''
-        self._update_content(query, connection)
+        self._update_content(query, db_connection)
 
-    def load_rows_by_parent_id(self, parent_id: str, connection: DBConnection):
+    def load_rows_by_parent_id(self, parent_id: str, db_connection: DBConnection):
         query = f'''
         SELECT	MUSIC_ALBUMS.NAME,
                 '$'||MUSIC_ALBUMS.PRICE,
@@ -81,4 +81,4 @@ class AlbumView(TableView, ABC):
         MUSIC_ALBUMS.ALBUM_ID
         ORDER BY MUSIC_ALBUMS.NAME
         '''
-        self._update_content(query, connection)
+        self._update_content(query, db_connection)

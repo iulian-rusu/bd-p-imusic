@@ -81,17 +81,16 @@ class HomePage(BasePage, ABC):
         current_table_view = self.table_views[self.current_view_btn]
         current_table_view.tkraise()
         if load:
-            # the GUI is buggy if I run this as a backgrond task
             current_table_view.load_all_rows(self.master.db_connection)
 
     def search_by_parent_id(self, parent_id: str):
-        # search for entities whose parent matches the search criteria
-        self.table_views[self.current_view_btn].load_rows_by_parent_id(parent_id, self.master.db_connection)
+        current_table_view = self.table_views[self.current_view_btn]
+        current_table_view.load_rows_by_parent_id(parent_id, self.master.db_connection)
 
     def on_search(self):
         user_input = sanitize(self.search_entry.get().strip())
         current_table_view = self.table_views[self.current_view_btn]
-        current_table_view.load_searched_rows(user_input, self.master.db_connection)
+        current_table_view.load_rows_by_name(user_input, self.master.db_connection)
 
     def build_gui(self):
         # top menu

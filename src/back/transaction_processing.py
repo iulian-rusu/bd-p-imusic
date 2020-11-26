@@ -2,6 +2,7 @@ from collections import namedtuple
 
 from src.back.db_connetcion import DBConnection
 from src.back.input_processing import sanitize
+from src.back.user import User
 
 
 class Transaction:
@@ -9,33 +10,39 @@ class Transaction:
     TransactionData = namedtuple("TransactionData", ['tr_id', 'amount'])
 
     @staticmethod
-    def make_transaction(username: str, album_id: str, price: str,  connection: DBConnection) -> bool:
+    def make_transaction(user: User, album_id: str, amount: str, db_connection: DBConnection) -> bool:
         command = f"""
         BEGIN
             UPDATE PAYMENT_INFO SET 
-                ACCOUNT_BALANCE = ACCOUNT_BALANCE - {price} 
-                WHERE USER_ID IN (SELECT USER_ID FROM USERS WHERE USERNAME='{sanitize(username)}');
+                ACCOUNT_BALANCE = ACCOUNT_BALANCE - {amount} 
+                WHERE USER_ID IN (SELECT USER_ID FROM USERS WHERE USERNAME='{sanitize(user.username)}');
 
             INSERT INTO TRANSACTIONS(USER_ID, ALBUM_ID, AMOUNT, "date") VALUES(
-                (SELECT USER_ID FROM USERS WHERE USERNAME='{sanitize(username)}'), 
+                (SELECT USER_ID FROM USERS WHERE USERNAME='{sanitize(user.username)}'), 
                 {album_id},
-                {price}, 
+                {amount}, 
                 SYSDATE
             );
         END;
         """
-        return connection.exec_command(command)
+        if db_connection.exec_command(command):
+            user.account_balace += int(float(amount) * 100)
+            return True
+        return False
 
     @staticmethod
-    def refund_transaction(username: str, tr_id: str, price: str, db_connection: DBConnection) -> bool:
+    def refund_transaction(user: User, tr_id: str, amount: str, db_connection: DBConnection) -> bool:
         command = f"""
         BEGIN
             DELETE FROM TRANSACTIONS
             WHERE TR_ID={tr_id};
             
             UPDATE PAYMENT_INFO SET 
-                ACCOUNT_BALANCE = ACCOUNT_BALANCE + {price} 
-                WHERE USER_ID IN (SELECT USER_ID FROM USERS WHERE USERNAME='{sanitize(username)}');     
+                ACCOUNT_BALANCE = ACCOUNT_BALANCE + {amount} 
+                WHERE USER_ID IN (SELECT USER_ID FROM USERS WHERE USERNAME='{sanitize(user.username)}');     
         END;
         """
-        return db_connection.exec_command(command)
+        if db_connection.exec_command(command):
+            user.account_balace -= int(float(amount) * 100)
+            return True
+        return False

@@ -1,4 +1,5 @@
 from abc import ABC
+from typing import Tuple
 
 from src.front.table_views.table_view import TableView
 from src.back.db_connetcion import DBConnection
@@ -16,11 +17,11 @@ class SongView(TableView, ABC):
         self.heading(5, text="genre")
         self.heading(6, text="song_id")
 
-    def get_name_and_id(self, iid: str):
-        item = self.item(iid)
-        return item['values'][0], item['values'][5]
+    def get_name_and_id(self, iid: str) -> Tuple[str, str]:
+        item = self.item(iid)['values']
+        return item[0], item[5]
 
-    def load_all_rows(self, connection: DBConnection):
+    def load_all_rows(self, db_connection: DBConnection):
         # loads all song data from the databases, sorted alphabetically by name
         query = '''
         SELECT SONGS.NAME, 
@@ -35,9 +36,9 @@ class SongView(TableView, ABC):
         INNER JOIN MUSIC_GENRES ON MUSIC_GENRES.GENRE_ID = SONGS.GENRE_ID 
         ORDER BY SONGS.NAME
         '''
-        self._update_content(query, connection)
+        self._update_content(query, db_connection)
 
-    def load_searched_rows(self, key: str, connection: DBConnection, parent: str = ''):
+    def load_rows_by_name(self, name: str, db_connection: DBConnection, parent: str = ''):
         query = f'''
         SELECT SONGS.NAME, 
             MUSIC_ARTISTS.NAME,
@@ -49,12 +50,12 @@ class SongView(TableView, ABC):
         INNER JOIN MUSIC_ALBUMS ON SONGS.ALBUM_ID = MUSIC_ALBUMS.ALBUM_ID
         INNER JOIN MUSIC_ARTISTS ON MUSIC_ALBUMS.ARTIST_ID = MUSIC_ARTISTS.ARTIST_ID
         INNER JOIN MUSIC_GENRES ON MUSIC_GENRES.GENRE_ID = SONGS.GENRE_ID 
-        WHERE LOWER(SONGS.NAME) LIKE LOWER('%{key}%') 
+        WHERE LOWER(SONGS.NAME) LIKE LOWER('%{name}%') 
         ORDER BY SONGS.NAME
         '''
-        self._update_content(query, connection)
+        self._update_content(query, db_connection)
 
-    def load_rows_by_parent_id(self, parent_id: str, connection: DBConnection):
+    def load_rows_by_parent_id(self, parent_id: str, db_connection: DBConnection):
         query = f'''
         SELECT SONGS.NAME, 
             MUSIC_ARTISTS.NAME,
@@ -69,4 +70,4 @@ class SongView(TableView, ABC):
         WHERE SONGS.ALBUM_ID = {parent_id}
         ORDER BY SONGS.NAME
         '''
-        self._update_content(query, connection)
+        self._update_content(query, db_connection)
