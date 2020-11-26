@@ -29,6 +29,18 @@ class HomePage(BasePage, ABC):
         self.account_balance_lbl.config(text=f'balance: ${self.master.user.account_balace/100.0}')
         self.set_current_view(self.songs_btn)
 
+    def set_current_view(self, new_btn: CustomButton, load: bool = True):
+        if self.current_view_btn:
+            self.current_view_btn.config(font=BasePage.LIGHT_FONT, background='#d1d1d1')
+        new_btn.config(font=BasePage.UNDERLINED_BOLD_FONT, background='#c1c1c1')
+        self.search_entry.delete(0, 'end')
+        self.current_view_btn = new_btn
+        self.buy_btn.config(state='disabled')
+        current_table_view = self.table_views[self.current_view_btn]
+        current_table_view.tkraise()
+        if load:
+            current_table_view.load_all_rows(self.master.db_connection)
+
     def on_log_out(self):
         self.master.user = None
         self.master.show_page('start')
@@ -44,6 +56,11 @@ class HomePage(BasePage, ABC):
             self.selected_album = None
         else:
             self.buy_btn.display_message('error', delay=0.5, final_state='disabled')
+
+    def on_search(self):
+        user_input = sanitize(self.search_entry.get().strip())
+        current_table_view = self.table_views[self.current_view_btn]
+        current_table_view.load_rows_by_name(user_input, self.master.db_connection)
 
     def on_album_select(self, event):
         album_data = self.table_views[self.albums_btn].get_selected_album_data(event)
@@ -71,26 +88,9 @@ class HomePage(BasePage, ABC):
             self.search_entry.insert(0, f'artist: {parent_name}')
             self.search_by_parent_id(parent_id)
 
-    def set_current_view(self, new_btn: CustomButton, load: bool = True):
-        if self.current_view_btn:
-            self.current_view_btn.config(font=BasePage.LIGHT_FONT, background='#d1d1d1')
-        new_btn.config(font=BasePage.UNDERLINED_BOLD_FONT, background='#c1c1c1')
-        self.search_entry.delete(0, 'end')
-        self.current_view_btn = new_btn
-        self.buy_btn.config(state='disabled')
-        current_table_view = self.table_views[self.current_view_btn]
-        current_table_view.tkraise()
-        if load:
-            current_table_view.load_all_rows(self.master.db_connection)
-
     def search_by_parent_id(self, parent_id: str):
         current_table_view = self.table_views[self.current_view_btn]
         current_table_view.load_rows_by_parent_id(parent_id, self.master.db_connection)
-
-    def on_search(self):
-        user_input = sanitize(self.search_entry.get().strip())
-        current_table_view = self.table_views[self.current_view_btn]
-        current_table_view.load_rows_by_name(user_input, self.master.db_connection)
 
     def build_gui(self):
         # top menu

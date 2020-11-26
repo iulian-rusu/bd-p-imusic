@@ -25,22 +25,22 @@ class StartPage(BasePage, ABC):
         ]
 
     def on_log_in(self):
+        self.master.run_background_task(self.log_in_task)
+
+    def log_in_task(self):
         username = self.username_entry.get().strip()
         password = self.password_entry.get().strip()
-
-        def log_in_task():
-            self.login_btn.config(state='disabled')
-            if self.master.log_in_user(username, password):
-                self.login_btn.config(state='normal')
-            else:
-                self.login_btn.display_message('invalid', delay=1)
-
-        self.master.run_background_task(log_in_task)
+        self.log_in_btn.config(state='disabled')
+        if self.master.log_in_user(username, password):
+            self.log_in_btn.config(state='normal', background='#b1b1b1')
+        else:
+            self.log_in_btn.display_message('invalid', delay=1)
 
     def on_register(self):
-        self.master.run_background_task(self.register_task())
+        self.master.run_background_task(self.register_task)
 
     def register_task(self):
+        self.register_btn.config(state='disabled')
         try:
             # check passwords
             password = self.password_reg_entry.get().strip()
@@ -82,9 +82,10 @@ class StartPage(BasePage, ABC):
             # try to load user data into database
             if not self.master.register_user(user_to_register):
                 raise ValueError('unable to insert user into database')
+            self.register_btn.config(state='normal', background='#b1b1b1')
         except ValueError as err:
             logging.error(f'Failed to register new user: {err}')
-            self.reg_btn.display_message('error', delay=1)
+            self.register_btn.display_message('error', delay=1)
 
     def build_gui(self):
         # log-in frame
@@ -111,12 +112,12 @@ class StartPage(BasePage, ABC):
         self.password_entry.grid(column='1', padx='20', pady='20', row='2')
         self.password_entry.bind('<Return>', lambda event: self.on_log_in())
         # 'log-in' button
-        self.login_btn = CustomButton(self.login_frame)
-        self.login_btn.config(activebackground='#9a9a9a', background='#b1b1b1', font=BasePage.LIGHT_FONT,
-                              relief='flat')
-        self.login_btn.config(text='log in', width='10')
-        self.login_btn.grid(column='0', columnspan='2', padx='5', pady='10', ipadx='5', ipady='3', row='3')
-        self.login_btn.configure(command=self.on_log_in)
+        self.log_in_btn = CustomButton(self.login_frame)
+        self.log_in_btn.config(activebackground='#9a9a9a', background='#b1b1b1', font=BasePage.LIGHT_FONT,
+                               relief='flat')
+        self.log_in_btn.config(text='log in', width='10')
+        self.log_in_btn.grid(column='0', columnspan='2', padx='5', pady='10', ipadx='5', ipady='3', row='3')
+        self.log_in_btn.configure(command=self.on_log_in)
 
         # application info frame
         self.info_frame = tk.Frame(self, background='#c3c3c3')
@@ -225,9 +226,9 @@ class StartPage(BasePage, ABC):
         self.exp_date_frame.config(height='200', width='400')
         self.exp_date_frame.grid(column='1', padx='5', pady='5', row='9')
         # 'register' button
-        self.reg_btn = CustomButton(self.register_frame)
-        self.reg_btn.config(activebackground='#9a9a9a', background='#b1b1b1', font=BasePage.LIGHT_FONT,
-                            relief='flat')
-        self.reg_btn.config(text='register', width='10')
-        self.reg_btn.configure(command=self.on_register)
-        self.reg_btn.grid(column='0', columnspan='2', padx='5', pady='20', ipadx='5', ipady='3', row='10')
+        self.register_btn = CustomButton(self.register_frame)
+        self.register_btn.config(activebackground='#9a9a9a', background='#b1b1b1', font=BasePage.LIGHT_FONT,
+                                 relief='flat')
+        self.register_btn.config(text='register', width='10')
+        self.register_btn.configure(command=self.on_register)
+        self.register_btn.grid(column='0', columnspan='2', padx='5', pady='20', ipadx='5', ipady='3', row='10')

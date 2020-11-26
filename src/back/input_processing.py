@@ -1,4 +1,5 @@
 import abc
+
 from pbkdf2 import PBKDF2
 
 ESCAPED_CHARS = {
@@ -22,7 +23,7 @@ class KeyDerivator(metaclass=abc.ABCMeta):
     __SALT_MOD = 173
     __SALT_PREFIX = 'bdp'
     __HASH_LEN = 32
-    __HASH_ITERS = 1000
+    __HASH_ITERS = 30_000
 
     @staticmethod
     def get_hash(password: str) -> str:
