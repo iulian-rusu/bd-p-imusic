@@ -26,7 +26,7 @@ class Transaction:
         END;
         """
         if db_connection.exec_command(command):
-            user.account_balace += int(float(amount) * 100)
+            user.account_balace -= int(float(amount) * 100)
             return True
         return False
 
@@ -43,6 +43,6 @@ class Transaction:
         END;
         """
         if db_connection.exec_command(command):
-            user.account_balace -= int(float(amount) * 100)
+            user.account_balace += int(float(amount) * 100)
             return True
         return False

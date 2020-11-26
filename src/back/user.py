@@ -30,7 +30,6 @@ class User:
                f"\nCARD TYPE:\t{self.card_type}\n"
 
     def has_empty_fields(self) -> bool:
-
         return any(map(lambda attr: len(str(attr)) == 0, vars(self).values()))
 
     def match_password(self, password: str) -> bool:
