@@ -25,6 +25,9 @@ class TableView(ttk.Treeview, metaclass=abc.ABCMeta):
                 self.insert('', 'end', values=row)
             db_connection.close_cursor()
 
+    def reset(self):
+        pass
+
     @abc.abstractmethod
     def get_name_and_id(self, iid: str) -> Tuple[str, str]:
         pass

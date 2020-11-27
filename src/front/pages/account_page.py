@@ -137,6 +137,7 @@ class AccountPage(BasePage, ABC):
         if isinstance(current_view, TableView):
             self.refund_btn.tkraise()
             username_key = sanitize(self.master.user.username)
+            current_view.reset()
             current_view.load_rows_by_name(username_key, self.master.db_connection)
         else:
             self.add_funds_btn.tkraise()

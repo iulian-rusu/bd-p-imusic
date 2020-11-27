@@ -20,6 +20,7 @@ class HomePage(BasePage, ABC):
     def __init__(self, *args, **kwargs):
         BasePage.__init__(self, *args, **kwargs)
         self.build_gui()
+        self.table_views[self.songs_btn].update_genre_content(self.master.db_connection)
         self.entries += [self.search_entry]
         self.selected_album = None
         self.current_view_btn = None
@@ -37,6 +38,7 @@ class HomePage(BasePage, ABC):
         self.current_view_btn = new_btn
         self.buy_btn.config(state='disabled')
         current_table_view = self.table_views[self.current_view_btn]
+        current_table_view.reset()
         current_table_view.tkraise()
         if load:
             current_table_view.load_all_rows(self.master.db_connection)
@@ -52,7 +54,7 @@ class HomePage(BasePage, ABC):
         album_price, album_id = self.selected_album.album_price, self.selected_album.album_id
         if self.selected_album and self.master.buy_album(album_id=album_id, album_price=album_price):
             self.account_balance_lbl.config(text=f'balance: ${self.master.user.account_balace / 100.0}')
-            self.buy_btn.display_message('success', delay=0.5, background='#59c872')
+            self.buy_btn.display_message('success', delay=0.5, background='#59c872', final_state='disabled')
             self.selected_album = None
         else:
             self.buy_btn.display_message('error', delay=0.5, final_state='disabled')
@@ -91,6 +93,10 @@ class HomePage(BasePage, ABC):
     def search_by_parent_id(self, parent_id: str):
         current_table_view = self.table_views[self.current_view_btn]
         current_table_view.load_rows_by_parent_id(parent_id, self.master.db_connection)
+
+    def search_songs_by_genre_id(self, genre_id: int):
+        current_view = self.table_views[self.songs_btn]
+        current_view.load_rows_by_genre_id(genre_id, self.master.db_connection)
 
     def build_gui(self):
         # top menu
@@ -173,6 +179,7 @@ class HomePage(BasePage, ABC):
         self.table_views[self.albums_btn].bind('<Double 1>', self.on_album_open)
         self.table_views[self.albums_btn].bind('<Button 1>', self.on_album_select)
         self.table_views[self.artists_btn].bind('<Double 1>', self.on_artist_open)
+        self.table_views[self.songs_btn].genre_select_callback = self.search_songs_by_genre_id
         # place views in frame
         for view in self.table_views.values():
             view.place(anchor='nw', height='591', width='1400', x='0', y='0')

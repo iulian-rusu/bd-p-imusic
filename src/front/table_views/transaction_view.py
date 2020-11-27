@@ -40,7 +40,6 @@ class TransactionView(TableView, ABC):
         logging.warning("Attempt to load all transactions for a specific user")
 
     def load_rows_by_name(self, name: str, db_connection: DBConnection):
-        # loads all transactions from database by a specific user, sorted from latest to oldest
         query = f'''
         SELECT	MUSIC_ALBUMS.NAME ,
                 COUNT(SONGS.SONG_ID),

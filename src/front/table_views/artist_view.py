@@ -20,7 +20,6 @@ class ArtistView(TableView, ABC):
         return item[0], item[3]
 
     def load_all_rows(self, db_connection: DBConnection):
-        # loads all artist data from the databases, sorted alphabetically by name
         query = '''
         SELECT 	MUSIC_ARTISTS.NAME,
                 COUNT(DISTINCT MUSIC_ALBUMS.NAME),

@@ -30,7 +30,6 @@ class AlbumView(TableView, ABC):
         return item[0], item[5]
 
     def load_all_rows(self, db_connection: DBConnection):
-        # loads all album data from the databases, sorted alphabetically by name
         query = '''
         SELECT	MUSIC_ALBUMS.NAME,
                 '$'||MUSIC_ALBUMS.PRICE,
