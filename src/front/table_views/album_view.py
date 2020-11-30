@@ -2,7 +2,6 @@ from abc import ABC
 from typing import Optional, Tuple
 
 from src.front.table_views.table_view import TableView
-from src.back.db_connetcion import DBConnection
 
 
 class AlbumView(TableView, ABC):
@@ -29,7 +28,7 @@ class AlbumView(TableView, ABC):
         item = self.item(iid)['values']
         return item[0], item[5]
 
-    def load_all_rows(self, db_connection: DBConnection):
+    def load_all_rows(self):
         query = '''
         SELECT	MUSIC_ALBUMS.NAME,
                 '$'||MUSIC_ALBUMS.PRICE,
@@ -44,9 +43,9 @@ class AlbumView(TableView, ABC):
         MUSIC_ALBUMS.ALBUM_ID
         ORDER BY MUSIC_ALBUMS.NAME
         '''
-        self._update_content(query, db_connection)
+        self._update_content(query)
 
-    def load_rows_by_name(self, name: str, db_connection: DBConnection):
+    def load_rows_by_name(self, name: str):
         query = f'''
         SELECT	MUSIC_ALBUMS.NAME,
                 '$'||MUSIC_ALBUMS.PRICE,
@@ -62,9 +61,9 @@ class AlbumView(TableView, ABC):
         MUSIC_ALBUMS.ALBUM_ID
         ORDER BY MUSIC_ALBUMS.NAME
         '''
-        self._update_content(query, db_connection)
+        self._update_content(query)
 
-    def load_rows_by_parent_id(self, parent_id: str, db_connection: DBConnection):
+    def load_rows_by_parent_id(self, parent_id: str):
         query = f'''
         SELECT	MUSIC_ALBUMS.NAME,
                 '$'||MUSIC_ALBUMS.PRICE,
@@ -80,4 +79,4 @@ class AlbumView(TableView, ABC):
         MUSIC_ALBUMS.ALBUM_ID
         ORDER BY MUSIC_ALBUMS.NAME
         '''
-        self._update_content(query, db_connection)
+        self._update_content(query)

@@ -138,7 +138,7 @@ class AccountPage(BasePage, ABC):
             self.refund_btn.tkraise()
             username_key = sanitize(self.master.user.username)
             current_view.reset()
-            current_view.load_rows_by_name(username_key, self.master.db_connection)
+            current_view.load_rows_by_name(username_key)
         else:
             self.add_funds_btn.tkraise()
         current_view.tkraise()
@@ -161,9 +161,7 @@ class AccountPage(BasePage, ABC):
             elif len(new_pass):
                 raise ValueError('old password required to change password')
             # update in database
-            if self.master.update_user(username, first_name, last_name, email, new_pass):
-                logging.info('Successfully updated user data')
-            else:
+            if not self.master.update_user(username, first_name, last_name, email, new_pass):
                 raise RuntimeError('database could not update data')
         except (ValueError, RuntimeError) as err:
             logging.error(f'Failed to edit personal data: {err}')
@@ -239,7 +237,7 @@ class AccountPage(BasePage, ABC):
         self.content_frame.config(height='591', width='1400')
         self.content_frame.grid(column='0', row='1')
         # transactions view
-        self.transaction_view = TransactionView(master=self.content_frame)
+        self.transaction_view = TransactionView(master=self.content_frame, db_loader=self.master.db_loader)
         self.transaction_view.place(anchor='nw', height='591', width='1400', x='0', y='0')
         self.transaction_view.bind('<Button 1>', self.on_album_select)
         # account view

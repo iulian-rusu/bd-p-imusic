@@ -4,6 +4,7 @@ from typing import Callable
 
 from src.back.back_thread import BackThread
 from src.back.db_connetcion import DBConnection
+from src.back.db_loader import DBLoader
 from src.back.transaction_processing import Transaction
 from src.back.user import User
 from src.front.pages.account_page import AccountPage
@@ -21,6 +22,7 @@ class Application(tk.Tk):
         tk.Tk.__init__(self, *args, **kwargs)
         self.db_connection = db_connection
         self.back_thread = BackThread()
+        self.db_loader = DBLoader(self.db_connection)
         # dcitionary with all app pages
         self.pages = {
             'start': StartPage(title='Welcome to iMusic', master=self),

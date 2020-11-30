@@ -20,7 +20,7 @@ class HomePage(BasePage, ABC):
     def __init__(self, *args, **kwargs):
         BasePage.__init__(self, *args, **kwargs)
         self.build_gui()
-        self.table_views[self.songs_btn].update_genre_content(self.master.db_connection)
+        self.table_views[self.songs_btn].update_genre_content()
         self.entries += [self.search_entry]
         self.selected_album = None
         self.current_view_btn = None
@@ -41,7 +41,7 @@ class HomePage(BasePage, ABC):
         current_table_view.reset()
         current_table_view.tkraise()
         if load:
-            current_table_view.load_all_rows(self.master.db_connection)
+            current_table_view.load_all_rows()
 
     def on_log_out(self):
         self.master.user = None
@@ -62,7 +62,7 @@ class HomePage(BasePage, ABC):
     def on_search(self):
         user_input = sanitize(self.search_entry.get().strip())
         current_table_view = self.table_views[self.current_view_btn]
-        current_table_view.load_rows_by_name(user_input, self.master.db_connection)
+        current_table_view.load_rows_by_name(user_input)
 
     def on_album_select(self, event):
         album_data = self.table_views[self.albums_btn].get_selected_album_data(event)
@@ -92,11 +92,11 @@ class HomePage(BasePage, ABC):
 
     def search_by_parent_id(self, parent_id: str):
         current_table_view = self.table_views[self.current_view_btn]
-        current_table_view.load_rows_by_parent_id(parent_id, self.master.db_connection)
+        current_table_view.load_rows_by_parent_id(parent_id)
 
     def search_songs_by_genre_id(self, genre_id: int):
         current_view = self.table_views[self.songs_btn]
-        current_view.load_rows_by_genre_id(genre_id, self.master.db_connection)
+        current_view.load_rows_by_genre_id(genre_id)
 
     def build_gui(self):
         # top menu
@@ -171,9 +171,9 @@ class HomePage(BasePage, ABC):
         style = ttk.Style()
         style.configure("Treeview.Heading", font=('Bahnschrift Light', 12))
         self.table_views = {
-            self.songs_btn: SongView(master=self.content_frame),
-            self.albums_btn: AlbumView(master=self.content_frame),
-            self.artists_btn: ArtistView(master=self.content_frame)
+            self.songs_btn: SongView(master=self.content_frame, db_loader=self.master.db_loader),
+            self.albums_btn: AlbumView(master=self.content_frame, db_loader=self.master.db_loader),
+            self.artists_btn: ArtistView(master=self.content_frame, db_loader=self.master.db_loader)
         }
         # add callbacks to views
         self.table_views[self.albums_btn].bind('<Double 1>', self.on_album_open)

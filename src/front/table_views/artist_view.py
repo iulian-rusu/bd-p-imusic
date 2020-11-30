@@ -2,7 +2,6 @@ from abc import ABC
 from typing import Tuple
 
 from src.front.table_views.table_view import TableView
-from src.back.db_connetcion import DBConnection
 
 
 class ArtistView(TableView, ABC):
@@ -19,7 +18,7 @@ class ArtistView(TableView, ABC):
         item = self.item(iid)['values']
         return item[0], item[3]
 
-    def load_all_rows(self, db_connection: DBConnection):
+    def load_all_rows(self):
         query = '''
         SELECT 	MUSIC_ARTISTS.NAME,
                 COUNT(DISTINCT MUSIC_ALBUMS.NAME),
@@ -31,9 +30,9 @@ class ArtistView(TableView, ABC):
         GROUP BY MUSIC_ARTISTS.NAME, MUSIC_ARTISTS.ARTIST_ID
         ORDER BY MUSIC_ARTISTS.NAME
         '''
-        self._update_content(query, db_connection)
+        self._update_content(query)
 
-    def load_rows_by_name(self, name: str, db_connection: DBConnection):
+    def load_rows_by_name(self, name: str):
         query = f'''
         SELECT 	MUSIC_ARTISTS.NAME,
                 COUNT(DISTINCT MUSIC_ALBUMS.NAME),
@@ -46,7 +45,7 @@ class ArtistView(TableView, ABC):
         GROUP BY MUSIC_ARTISTS.NAME, MUSIC_ARTISTS.ARTIST_ID
         ORDER BY MUSIC_ARTISTS.NAME
         '''
-        self._update_content(query, db_connection)
+        self._update_content(query)
 
-    def load_rows_by_parent_id(self, parent_id: str, db_connection: DBConnection):
+    def load_rows_by_parent_id(self, parent_id: str):
         pass

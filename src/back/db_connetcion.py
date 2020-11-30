@@ -36,7 +36,7 @@ class DBConnection:
             self.is_connected = True
             logging.info("Connected to database")
         except cx_Oracle.Error as err:
-            logging.error(f"Database error: {err}")
+            self.log_error(err)
 
     def disconnect(self):
         if self.is_connected and self.connection:
@@ -45,17 +45,16 @@ class DBConnection:
                 self.is_connected = False
                 logging.info("Disconnected from database")
             except cx_Oracle.Error as err:
-                logging.error(f"Database error: {err}")
+                self.log_error(err)
 
     def fetch_data(self, query: str) -> Optional[cx_Oracle.Cursor]:
         if self.is_connected:
             try:
                 self.cursor = self.connection.cursor()
                 self.cursor.execute(query)
-                logging.info("Successfully fetched data")
                 return self.cursor
             except cx_Oracle.Error as err:
-                logging.error(f"Database error: {err}")
+                self.log_error(err)
         return None
 
     def exec_command(self, sql_command: str) -> bool:
@@ -64,15 +63,18 @@ class DBConnection:
             try:
                 with self.connection.cursor() as cursor:
                     cursor.execute(sql_command)
-                    logging.info("Successfully executed command")
                     self.connection.commit()
                     response = True
             except cx_Oracle.Error as err:
-                logging.error(f"Database error: {err}")
+                self.log_error(err)
         return response
 
     def close_cursor(self):
         try:
             self.cursor.close()
         except cx_Oracle.Error as err:
-            logging.error(f"Database error: {err}")
+            self.log_error(err)
+
+    @staticmethod
+    def log_error(err):
+        logging.error(f"Database error: {err}")

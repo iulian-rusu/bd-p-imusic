@@ -3,7 +3,6 @@ from abc import ABC
 from typing import Optional, Tuple
 
 from src.front.table_views.table_view import TableView
-from src.back.db_connetcion import DBConnection
 
 
 class TransactionView(TableView, ABC):
@@ -36,10 +35,10 @@ class TransactionView(TableView, ABC):
                 self.delete(iid)
                 return
 
-    def load_all_rows(self, db_connection: DBConnection):
-        logging.warning("Attempt to load all transactions for a specific user")
+    def load_all_rows(self):
+        logging.warning("Cannot load transactions from other users")
 
-    def load_rows_by_name(self, name: str, db_connection: DBConnection):
+    def load_rows_by_name(self, name: str):
         query = f'''
         SELECT	MUSIC_ALBUMS.NAME ,
                 COUNT(SONGS.SONG_ID),
@@ -54,7 +53,7 @@ class TransactionView(TableView, ABC):
         GROUP BY MUSIC_ALBUMS.NAME, TRANSACTIONS."date", TRANSACTIONS.AMOUNT, TRANSACTIONS.TR_ID
         ORDER BY TRANSACTIONS."date" DESC
         '''
-        self._update_content(query, db_connection)
+        self._update_content(query)
 
-    def load_rows_by_parent_id(self, parent_id: str, db_connection: DBConnection):
+    def load_rows_by_parent_id(self, parent_id: str):
         pass
