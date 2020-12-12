@@ -8,6 +8,7 @@ def config_after_delay(delay: float, *components, **kwargs, ):
         time.sleep(delay)
         for component in components:
             component.config(**kwargs)
+
     threading.Thread(target=wrapped).start()
 
 

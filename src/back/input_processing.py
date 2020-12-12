@@ -13,6 +13,29 @@ def sanitize(user_input: str) -> str:
     return ''.join(map(lambda char: ESCAPED_CHARS.get(char, char), str(user_input)))
 
 
+def parse_args():
+    import argparse
+    import sys
+    import logging
+    parser = argparse.ArgumentParser(description='Parse parameters for database access.')
+    parser.add_argument('-u', '--username')
+    parser.add_argument('-p', '--password')
+    parser.add_argument('--host')
+    parser.add_argument('--port')
+    parser.add_argument('--service')
+    arguments = parser.parse_args()
+    if not arguments.username or not arguments.password:
+        logging.error("Username and password required to access database.")
+        sys.exit(-1)
+    if not arguments.host:
+        arguments.host = 'localhost'
+    if not arguments.port:
+        arguments.port = '1521'
+    if not arguments.service:
+        arguments.service = ''
+    return arguments
+
+
 class KeyDerivator(metaclass=abc.ABCMeta):
     """
     Derives a hashed key using PBKDF2 (Password-Based Key Derivation Function 2).

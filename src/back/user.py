@@ -127,7 +127,9 @@ class User:
         WHERE USERS.USERNAME = '{sanitize(username)}' AND USERS.PASSWORD = '{KeyDerivator.get_hash(sanitize(password))}'
         '''
         result = db_connection.fetch_data(query)
-        row = result.fetchone()
-        if row:
-            return cls(*row)
+        if result:
+            row = result.fetchone()
+            db_connection.close_cursor()
+            if row:
+                return cls(*row)
         return None

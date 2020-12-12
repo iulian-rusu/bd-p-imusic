@@ -43,6 +43,8 @@ class SongView(TableView, ABC):
         self.selected_genre_id = self.genres.get(selected_genre, 0)
         if self.selected_genre_id > 0:
             self.heading(5, text=selected_genre)
+        else:
+            self.heading(5, text='genre')
         if self.genre_select_callback:
             self.genre_select_callback(self.selected_genre_id)
 

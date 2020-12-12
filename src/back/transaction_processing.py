@@ -1,3 +1,4 @@
+from random import randint
 from collections import namedtuple
 
 from src.back.db_connetcion import DBConnection
@@ -6,6 +7,7 @@ from src.back.user import User
 
 
 class Transaction:
+    VERIF_SEED_MAX = 0xFFFF
     AlbumData = namedtuple("AlbumData", ['album_id', 'album_price'])
     TransactionData = namedtuple("TransactionData", ['tr_id', 'amount'])
 
@@ -46,3 +48,7 @@ class Transaction:
             user.account_balace += int(float(amount) * 100)
             return True
         return False
+
+    @staticmethod
+    def generate_verification_code() -> int:
+        return randint(0, Transaction.VERIF_SEED_MAX)
