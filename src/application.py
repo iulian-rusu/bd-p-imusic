@@ -61,16 +61,24 @@ class Application(tk.Tk):
             logging.info(f"User '{username}' logged in")
             self.show_page('home')
             return True
-        logging.info(f"Failed log in for username: '{username}'")
+        logging.info(f"User '{username}' failed to log in")
         return False
 
     def register_user(self, user_to_register: User) -> bool:
         has_registered = user_to_register.register(self.db_connection)
         if has_registered:
             self.user = user_to_register
-            logging.info(f"New user registered: '{self.user.username}'")
+            logging.info(f"Registered user '{self.user.username}'")
             self.show_page('home')
         return has_registered
+
+    def delete_user(self) -> bool:
+        if self.user.delete(self.db_connection):
+            logging.info(f"Deleted user '{self.user.username}")
+            return True
+        else:
+            logging.error(f"Failed to delete user '{self.user.username}'")
+            return False
 
     def buy_album(self, album_id: str, album_price: str) -> bool:
         return Transaction.make_transaction(self.user, album_id, album_price, self.db_connection)

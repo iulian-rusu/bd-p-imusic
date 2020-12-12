@@ -24,10 +24,10 @@ class User:
         self.card_type = card_type
 
     def __str__(self) -> str:
-        return f"USERNAME:\t{self.username}\nFIRST NAME:\t{self.first_name}\nLAST NAME:\t{self.last_name}" \
-               f"\nPASSWORD:\t{self.__hashed_password}\nEMAIL:\t\t{self.email}\nCARD NR:\t{self.card_nr}" \
-               f"\nEXP DATE:\t{self.expiration_date}\nBALANCE:\t${self.account_balace / 100.0}" \
-               f"\nCARD TYPE:\t{self.card_type}\n"
+        return f'USERNAME:\t{self.username}\nFIRST NAME:\t{self.first_name}\nLAST NAME:\t{self.last_name}' \
+               f'\nPASSWORD:\t{self.__hashed_password}\nEMAIL:\t\t{self.email}\nCARD NR:\t{self.card_nr}' \
+               f'\nEXP DATE:\t{self.expiration_date}\nBALANCE:\t${self.account_balace / 100.0}' \
+               f'\nCARD TYPE:\t{self.card_type}\n'
 
     def has_empty_fields(self) -> bool:
         return any(map(lambda attr: len(str(attr)) == 0, vars(self).values()))
@@ -39,7 +39,7 @@ class User:
         username, first_name, last_name, password, email, card_nr, expiration_date, account_balance, card_type \
             = [sanitize(str(attr)) for attr in vars(self).values()]
         self.__hashed_password = KeyDerivator.get_hash(password)
-        command = f"""
+        command = f'''
         BEGIN 
             INSERT INTO USERS (USERNAME, FIRST_NAME, LAST_NAME, PASSWORD, EMAIL) VALUES (
                     '{username}', 
@@ -49,14 +49,29 @@ class User:
                     NULLIF('{email}', '{User.NO_EMAIL_MSG}')
             );
             INSERT INTO PAYMENT_INFO(USER_ID, CARD_NR, EXPIRATION_DATE, ACCOUNT_BALANCE, CARD_TYPE_ID) VALUES (
-                (SELECT USER_ID FROM USERS WHERE USERNAME='{username}'), 
+                (SELECT USER_ID FROM USERS WHERE USERNAME = '{username}'), 
                 '{card_nr}',
                 TO_DATE('{expiration_date}', 'dd-mm-yyyy'), 
                 {account_balance}, 
-                (SELECT TYPE_ID FROM CARD_TYPES WHERE NAME=INITCAP('{card_type}'))
+                (SELECT TYPE_ID FROM CARD_TYPES WHERE NAME = INITCAP('{card_type}'))
             ); 
         END;
-        """
+        '''
+        return db_connection.exec_command(command)
+
+    def delete(self, db_connection: DBConnection) -> bool:
+        sanitized_username = sanitize(self.username)
+        command = f'''
+        BEGIN   
+            DELETE FROM TRANSACTIONS 
+            WHERE USER_ID IN (SELECT USER_ID FROM USERS WHERE USERNAME = '{sanitized_username}');
+        
+            DELETE FROM PAYMENT_INFO 
+            WHERE USER_ID IN (SELECT USER_ID FROM USERS WHERE USERNAME = '{sanitized_username}');
+
+            DELETE FROM USERS WHERE USERNAME = '{sanitized_username}';
+        END;
+        '''
         return db_connection.exec_command(command)
 
     def update_personal_data(self, username: str, first_name: str, last_name: str, email: str, password: str,
@@ -65,15 +80,15 @@ class User:
             password = self.__hashed_password
         else:
             password = KeyDerivator.get_hash(sanitize(password))
-        command = f"""
+        command = f'''
             UPDATE USERS SET 
-            USERNAME='{sanitize(username)}',
-            FIRST_NAME='{sanitize(first_name)}',
-            LAST_NAME='{sanitize(last_name)}',
-            EMAIL=NULLIF('{sanitize(email)}','{User.NO_EMAIL_MSG}'), 
-            PASSWORD='{password}' 
-            WHERE USERNAME='{self.username}'
-        """
+            USERNAME = '{sanitize(username)}',
+            FIRST_NAME = '{sanitize(first_name)}',
+            LAST_NAME = '{sanitize(last_name)}',
+            EMAIL = NULLIF('{sanitize(email)}', '{User.NO_EMAIL_MSG}'), 
+            PASSWORD = '{password}' 
+            WHERE USERNAME = '{sanitize(self.username)}'
+        '''
         if db_connection.exec_command(command):
             self.username = username
             self.first_name = first_name
@@ -84,11 +99,11 @@ class User:
         return False
 
     def add_funds(self, amount_to_add: str, db_connection: DBConnection) -> bool:
-        command = f"""
+        command = f'''
             UPDATE PAYMENT_INFO SET 
             ACCOUNT_BALANCE = ACCOUNT_BALANCE + {amount_to_add} 
-            WHERE USER_ID IN (SELECT USER_ID FROM USERS WHERE USERNAME='{sanitize(self.username)}')
-        """
+            WHERE USER_ID IN (SELECT USER_ID FROM USERS WHERE USERNAME = '{sanitize(self.username)}')
+        '''
         if db_connection.exec_command(command):
             self.account_balace += int(float(amount_to_add) * 100)
             return True

@@ -118,7 +118,6 @@ class StartPage(BasePage, ABC):
         self.log_in_btn.config(text='log in', width='10')
         self.log_in_btn.grid(column='0', columnspan='2', padx='5', pady='10', ipadx='5', ipady='3', row='3')
         self.log_in_btn.configure(command=self.on_log_in)
-
         # application info frame
         self.info_frame = tk.Frame(self, background='#c3c3c3')
         filler_top = tk.Frame(self.info_frame)
@@ -134,7 +133,7 @@ class StartPage(BasePage, ABC):
         self.app_info_msg.grid(padx='50', row='1', sticky='w')
         self.description_msg = tk.Message(self.info_frame)
         self.description_msg.config(font='{Bahnschrift Light} 14 {}', takefocus=False,
-                                    text='Browse and buy music from one of the largest databases in the world. ',
+                                    text='Browse and buy high-quality music from a variety of genres. ',
                                     width='300', background='#c3c3c3')
         self.description_msg.grid(column='0', padx='50', row='2', sticky='w')
         # registration frame
@@ -194,7 +193,8 @@ class StartPage(BasePage, ABC):
         self.card_nr_entry.config(relief='flat')
         self.card_nr_entry.grid(column='1', row='7')
         self.card_type_spinbox = tk.Spinbox(self.register_frame)
-        self.card_type_spinbox.config(font=BasePage.LIGHT_FONT, relief='flat', values='credit debit',
+        spinbox_vals = self.master.db_loader.load_spinbox(self.card_type_spinbox, 'SELECT NAME FROM CARD_TYPES')
+        self.card_type_spinbox.config(font=BasePage.LIGHT_FONT, relief='flat', values=spinbox_vals,
                                       width='10', state='readonly')
         self.card_type_spinbox.grid(column='1', row='8')
         self.exp_date_frame = ttk.Frame(self.register_frame)

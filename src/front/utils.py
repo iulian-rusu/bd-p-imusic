@@ -1,10 +1,9 @@
 import threading
 import time
 import tkinter as tk
-from typing import List
 
 
-def config_after_delay(delay: float, components: List, **kwargs, ):
+def config_after_delay(delay: float, *components, **kwargs, ):
     def wrapped():
         time.sleep(delay)
         for component in components:
@@ -20,16 +19,16 @@ class CustomButton(tk.Button):
 
     def __init__(self, *args, **kwargs):
         tk.Button.__init__(self, *args, **kwargs)
-        self.bind("<Enter>", self.on_enter)
-        self.bind("<Leave>", self.on_leave)
+        self.bind("<Enter>", lambda event: self.on_enter())
+        self.bind("<Leave>", lambda event: self.on_leave())
         self.default_bg = self["background"]
 
-    def on_enter(self, event):
+    def on_enter(self):
         if self['state'] == 'normal':
             self.default_bg = self["background"]
             self['background'] = self['activebackground']
 
-    def on_leave(self, event):
+    def on_leave(self):
         if self['state'] == 'normal':
             self['background'] = self.default_bg
 
@@ -42,4 +41,4 @@ class CustomButton(tk.Button):
         normal_msg = self['text']
         prev_bg = self.default_bg
         self.config(text=msg, background=background, state='disabled')
-        config_after_delay(delay, [self], text=normal_msg, background=prev_bg, state=final_state)
+        config_after_delay(delay, self, text=normal_msg, background=prev_bg, state=final_state)

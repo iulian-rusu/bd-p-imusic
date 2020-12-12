@@ -31,23 +31,30 @@ class AccountPage(BasePage, ABC):
         self.personal_toggled_lbls = [
             self.password_lbl, self.old_password_lbl, self.new_password_lbl, self.new_password_conf_lbl,
             self.old_password_lbl]
-        self.payment_toggled_lbls = [
+        self.payment_toggled_widgets = [
             self.add_funds_lbl, self.amount_lbl, self.verif_lbl, self.validate_btn]
+        # remember widgets that are invisible initially
+        self.place_forget_widgets = [self.delete_account_btn]
         self.is_editing_personal_info = False
         self.selected_transaction = None
         self.current_view_btn = None
 
     def reset(self):
         BasePage.reset(self)
-        # hide widgets that need to be toggled
+        # disable widgets that need to be toggled
         for label in self.personal_toggled_lbls:
             label.config(state='disabled')
-        for label in self.payment_toggled_lbls:
-            label.config(state='disabled')
+        for widget in self.payment_toggled_widgets:
+            widget.config(state='disabled')
+        # hide invisible widgets
+        for widget in self.place_forget_widgets:
+            widget.place_forget()
         self.load_account_data()
         for entry in self.entries:
             entry.config(state='readonly')
         self.account_balance_lbl.config(text=f'balance: ${self.master.user.account_balace / 100.0}')
+        self.is_editing_personal_info = False
+        self.selected_transaction = None
         self.on_personal_info_view()
 
     def on_home(self):
@@ -85,7 +92,7 @@ class AccountPage(BasePage, ABC):
             self.refund_btn.config(state='disabled')
 
     def on_add_funds(self):
-        for label in self.payment_toggled_lbls:
+        for label in self.payment_toggled_widgets:
             label.config(state='normal')
         for entry in self.payment_entries:
             entry.config(state='normal')
@@ -110,7 +117,7 @@ class AccountPage(BasePage, ABC):
         except (ValueError, OverflowError) as err:
             logging.error(f'Failed to add funds to account: {err}')
             self.validate_btn.display_message('error', delay=0.5, final_state='disabled')
-        for label in self.payment_toggled_lbls:
+        for label in self.payment_toggled_widgets:
             label.config(state='disabled')
         for entry in self.payment_entries:
             entry.delete(0, 'end')
@@ -119,14 +126,32 @@ class AccountPage(BasePage, ABC):
     def on_personal_info_edit(self):
         if not self.is_editing_personal_info:
             self.is_editing_personal_info = True
+            self.delete_account_btn.place(anchor='nw', relx='0.05', rely='0.85', width='200', x='0', y='0')
             for entry in self.personal_entries:
                 entry.config(state='normal')
             for label in self.personal_toggled_lbls:
                 label.config(state='normal')
         else:
+            self.delete_account_btn.place_forget()
             self.is_editing_personal_info = False
-            self.edit_personal_info_btn.config(state='disabled')
             self.save_personal_info()
+
+    def on_delete_account(self):
+        user_pass = self.old_pass_entry.get()
+        user = self.master.user
+        self.delete_account_btn.config(state='disabled', background=self.delete_account_btn.default_bg)
+
+        def delete_account_task():
+            if user.match_password(user_pass):
+                if self.master.delete_user():
+                    self.delete_account_btn.config(state='normal')
+                    self.on_log_out()
+                else:
+                    self.delete_account_btn.display_message('error', 0.5, final_state='normal')
+            else:
+                self.delete_account_btn.display_message('password required', 1.0, final_state='normal')
+
+        self.master.run_background_task(delete_account_task)
 
     def set_current_view(self, new_btn: CustomButton):
         if self.current_view_btn:
@@ -300,11 +325,17 @@ class AccountPage(BasePage, ABC):
         self.new_pass_conf_entry = tk.Entry(self.entry_frame)
         self.new_pass_conf_entry.config(relief='flat', font=BasePage.LIGHT_FONT, show='*')
         self.new_pass_conf_entry.place(anchor='nw', rely='0.7', width='300', x='0', y='0')
+        # 'edit personal info' button
         self.edit_personal_info_btn = CustomButton(self.entry_frame)
         self.edit_personal_info_btn.config(activebackground='#9a9a9a', background='#d1d1d1',
                                            font=BasePage.LIGHT_FONT, relief='flat')
         self.edit_personal_info_btn.config(text='edit personal details', command=self.on_personal_info_edit)
         self.edit_personal_info_btn.place(anchor='nw', relx='0.15', rely='0.85', width='200', x='0', y='0')
+        # 'delete account' button
+        self.delete_account_btn = CustomButton(self.personal_info_frame)
+        self.delete_account_btn.config(activebackground='#ff4545', background='#ff9b9b',
+                                       font=BasePage.LIGHT_FONT, relief='flat')
+        self.delete_account_btn.config(text='delete account', command=self.on_delete_account)
         self.entry_frame.config(height='200', width='200')
         self.entry_frame.place(anchor='ne', height='450', relx='1.0', rely='0.05', width='350', x='0', y='0')
         self.personal_info_frame.config(borderwidth='2', font=BasePage.LIGHT_FONT, height='200',
@@ -350,6 +381,7 @@ class AccountPage(BasePage, ABC):
         self.verif_entry = tk.Entry(self.payment_entry_frame)
         self.verif_entry.config(relief='flat', font=BasePage.LIGHT_FONT)
         self.verif_entry.place(anchor='nw', rely='0.7', width='300', x='0', y='0')
+        # 'validate' button
         self.validate_btn = CustomButton(self.payment_entry_frame)
         self.validate_btn.config(activebackground='#9a9a9a', background='#d1d1d1',
                                  font=BasePage.LIGHT_FONT)
