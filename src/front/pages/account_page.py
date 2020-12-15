@@ -146,14 +146,16 @@ class AccountPage(BasePage, ABC):
         self.delete_account_btn.config(state='disabled', background=self.delete_account_btn.default_bg)
 
         def delete_account_task():
-            if user.match_password(user_pass):
+            if not len(user_pass):
+                self.delete_account_btn.display_message('password required', 1.0, final_state='normal')
+            elif user.match_password(user_pass):
                 if self.master.delete_user():
                     self.delete_account_btn.config(state='normal')
                     self.on_log_out()
                 else:
                     self.delete_account_btn.display_message('error', 0.5, final_state='normal')
             else:
-                self.delete_account_btn.display_message('password required', 1.0, final_state='normal')
+                self.delete_account_btn.display_message('wrong password', 1.0, final_state='normal')
 
         self.master.run_background_task(delete_account_task)
 
