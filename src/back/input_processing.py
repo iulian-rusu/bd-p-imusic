@@ -2,6 +2,11 @@ import abc
 
 from pbkdf2 import PBKDF2
 
+
+def sanitize(user_input: str) -> str:
+    return user_input.replace('\'', '\'\'')
+
+
 ESCAPED_CHARS = {
     '\'': '\'\'',
     '%': '\\%',
@@ -9,7 +14,7 @@ ESCAPED_CHARS = {
 }
 
 
-def sanitize(user_input: str) -> str:
+def sanitize_extra(user_input: str) -> str:
     return ''.join(map(lambda char: ESCAPED_CHARS.get(char, char), str(user_input)))
 
 

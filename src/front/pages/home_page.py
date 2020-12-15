@@ -2,7 +2,7 @@ import tkinter as tk
 import tkinter.ttk as ttk
 from abc import ABC
 
-from src.back.input_processing import sanitize
+from src.back.input_processing import sanitize_extra
 from src.back.transaction_processing import Transaction
 from src.front.pages.base_page import BasePage
 from src.front.utils import CustomButton
@@ -60,7 +60,7 @@ class HomePage(BasePage, ABC):
             self.buy_btn.display_message('error', delay=0.5, final_state='disabled')
 
     def on_search(self):
-        user_input = sanitize(self.search_entry.get().strip())
+        user_input = sanitize_extra(self.search_entry.get().strip())
         current_table_view = self.table_views[self.current_view_btn]
         current_table_view.load_rows_by_name(user_input)
 
