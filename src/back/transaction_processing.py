@@ -1,7 +1,7 @@
 from random import randint
 from collections import namedtuple
 
-from src.back.db_connetcion import DBConnection
+from src.back.db_connection import DBConnection
 from src.back.input_processing import sanitize
 from src.back.user import User
 

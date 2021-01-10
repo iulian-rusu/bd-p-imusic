@@ -1,7 +1,7 @@
 import logging
 
 from src.application import Application
-from src.back.db_connetcion import DBConnection
+from src.back.db_connection import DBConnection
 from src.back.input_processing import parse_args
 
 logging.basicConfig(level=logging.DEBUG, format='%(levelname)-8s@%(asctime)s:\t%(message)s')

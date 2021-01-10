@@ -3,7 +3,7 @@ import tkinter as tk
 from typing import Callable
 
 from src.back.back_thread import BackThread
-from src.back.db_connetcion import DBConnection
+from src.back.db_connection import DBConnection
 from src.back.db_loader import DBLoader
 from src.back.transaction_processing import Transaction
 from src.back.user import User

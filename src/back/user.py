@@ -1,6 +1,6 @@
 from typing import Optional
 
-from src.back.db_connetcion import DBConnection
+from src.back.db_connection import DBConnection
 from src.back.input_processing import sanitize, KeyDerivator
 
 
